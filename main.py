@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 import argparse
 import shutil
 from typing import Sequence
-
 from src.agent import RAGAgent
 from src.config import CHROMA_DIR
 from src.embeddings import LocalEmbedder
@@ -27,13 +25,10 @@ def query(question: str) -> None:
     if not question.strip():
         print('Please provide a question.')
         return
-
     agent = RAGAgent()
     result = agent.answer(question)
-
     print('\n=== Answer ===')
     print(result['answer'])
-
     if result['sources']:
         print('\n=== Sources ===')
         for source in result['sources']:

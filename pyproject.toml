@@ -15,5 +15,5 @@ dependencies = [
     "langchain-community",
     "sentence-transformers",
     "torch",
-    "google-generativeai",
+    "google-genai",
 ]

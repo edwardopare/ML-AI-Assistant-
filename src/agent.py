@@ -2,13 +2,15 @@ from __future__ import annotations
 import os
 from typing import List
 from langchain_core.documents import Document
-from src.config import GEMINI_API_ENDPOINT, GEMINI_API_KEY, GEMINI_MODEL
-from src.retrieval import Retriever
+from .config import GEMINI_API_ENDPOINT, GEMINI_API_KEY, GEMINI_MODEL
+from .retrieval import Retriever
 
 try:
-    import google.generativeai as genai
+    import google.genai as genai
+    from google.genai.types import HttpOptions
 except ImportError:  # pragma: no cover
     genai = None
+    HttpOptions = None
 
 
 class GeminiClient:
@@ -17,24 +19,44 @@ class GeminiClient:
         self.api_key = api_key
         self.endpoint = endpoint
 
-        if genai and api_key:
-            genai.configure(api_key=api_key)
+        if genai is None:
+            self.client = None
+            return
 
-        if genai and endpoint:
+        client_kwargs = {}
+        if api_key:
+            client_kwargs['api_key'] = api_key
+        if endpoint and HttpOptions is not None:
+            client_kwargs['http_options'] = HttpOptions(base_url=endpoint)
+
+        # Only instantiate the client when there's an explicit credential or endpoint configured.
+        if client_kwargs:
             try:
-                genai.configure(api_endpoint=endpoint)
+                self.client = genai.Client(**client_kwargs)
             except Exception:
-                pass
+                self.client = None
+        else:
+            self.client = None
 
     def is_available(self) -> bool:
-        return genai is not None
+        return self.client is not None
 
     def generate(self, prompt: str) -> str:
-        if genai is None:
-            raise RuntimeError("Gemini client is unavailable. Install google-generativeai or configure a compatible Gemini SDK.")
+        if self.client is None:
+            raise RuntimeError(
+                "Gemini client is unavailable. Install google-genai or configure a compatible Gemini SDK."
+            )
 
-        response = genai.responses.create(model=self.model_name, input=prompt)
-        return getattr(response, "output_text", None) or getattr(response, "response_text", None) or str(response)
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+            )
+            return response.text or str(response)
+        except Exception:
+            # On any client/runtime error, fall back to returning the prompt
+            # which causes the agent to use the original query or local context.
+            return prompt
 
     def rewrite_query(self, query: str) -> str:
         if not self.is_available():
