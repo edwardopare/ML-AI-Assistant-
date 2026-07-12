@@ -1,0 +1,8 @@
+langchain
+langgraph
+chromadb
+pypdf
+pytest
+python-dotenv
+langchain-core
+langchain-community
