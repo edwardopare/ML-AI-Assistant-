@@ -21,10 +21,17 @@ def ingest() -> None:
     print(f'Persisted {len(documents)} chunks to {CHROMA_DIR}')
 
 
-def query(question: str) -> None:
+def query(question: str, auto_ingest: bool = True, force_ingest: bool = False) -> None:
     if not question.strip():
         print('Please provide a question.')
         return
+    
+    # Auto-ingest: if store missing or --force-ingest, run ingestion first
+    from src.store import store_exists
+    if force_ingest or (auto_ingest and not store_exists()):
+        print('Ingesting documents...')
+        ingest()
+    
     agent = RAGAgent()
     result = agent.answer(question)
     print('\n=== Answer ===')
@@ -53,6 +60,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     query_parser = sub.add_parser('query', help='Ask a question over the knowledge base')
     query_parser.add_argument('question', nargs='+', help='Question text')
+    query_parser.add_argument('--no-auto-ingest', action='store_true', help='Disable automatic ingestion if store missing')
+    query_parser.add_argument('--force-ingest', action='store_true', help='Force re-ingest before querying')
 
     sub.add_parser('reset', help='Remove persisted vector store and start fresh')
 
@@ -65,7 +74,9 @@ def main() -> None:
     if args.command == 'ingest':
         ingest()
     elif args.command == 'query':
-        query(' '.join(args.question))
+        auto_ingest = not args.no_auto_ingest if hasattr(args, 'no_auto_ingest') else True
+        force_ingest = args.force_ingest if hasattr(args, 'force_ingest') else False
+        query(' '.join(args.question), auto_ingest=auto_ingest, force_ingest=force_ingest)
     elif args.command == 'reset':
         reset()
 

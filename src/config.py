@@ -21,7 +21,7 @@ else:
 	if _raw_endpoint.startswith('http://') or _raw_endpoint.startswith('https://'):
 		GEMINI_API_ENDPOINT = _raw_endpoint
 	else:
-		# Try to find an embedded URL (e.g. lines like "POST https://...")
+		# Try to find an embedded URL 
 		import re
 		m = re.search(r"https?://\S+", _raw_endpoint)
 		GEMINI_API_ENDPOINT = m.group(0) if m else ''

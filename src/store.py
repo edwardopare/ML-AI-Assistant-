@@ -9,6 +9,18 @@ from chromadb.config import Settings
 from src.config import CHROMA_DIR
 
 
+def store_exists(persist_directory: Path = CHROMA_DIR) -> bool:
+    """Check if vector store has been populated (chromadb or fallback files)."""
+    if persist_directory.exists():
+        # Check chromadb directory
+        if (persist_directory / 'metadata').exists():
+            return True
+        # Check fallback files
+        if (persist_directory / 'embeddings.npy').exists() and (persist_directory / 'documents.json').exists():
+            return True
+    return False
+
+
 def create_client(persist_directory: Path = CHROMA_DIR) -> chromadb.PersistentClient:
     persist_directory.mkdir(parents=True, exist_ok=True)
     # Prefer a project-relative POSIX path to avoid Windows drive-letter syntax issues

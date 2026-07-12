@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 class Retriever:
-    def __init__(self, top_k: int = 5) -> None:
+    def __init__(self, top_k: int = 2) -> None:
         self.client = create_client()
         self.collection = get_collection(self.client)
         self.embedder = LocalEmbedder()
