@@ -1,9 +1,19 @@
 [project]
 name = "rag-ai"
 version = "0.1.0"
-description = "Add your description here"
+description = "A local Retrieval-Augmented Generation system for PDF documents"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "ipykernel>=7.3.0",
+    "langchain",
+    "langgraph",
+    "chromadb",
+    "pypdf",
+    "pytest",
+    "python-dotenv",
+    "langchain-core",
+    "langchain-community",
+    "sentence-transformers",
+    "torch",
+    "google-generativeai",
 ]

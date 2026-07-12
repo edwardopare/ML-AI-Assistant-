@@ -6,3 +6,6 @@ pytest
 python-dotenv
 langchain-core
 langchain-community
+sentence-transformers
+torch
+google-generativeai
