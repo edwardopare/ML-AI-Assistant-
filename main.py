@@ -32,7 +32,7 @@ def query(question: str, auto_ingest: bool = True, force_ingest: bool = False) -
         print('Ingesting documents...')
         ingest()
     
-    agent = RAGAgent()
+    agent = RAGAgent(model_name="phi3")
     result = agent.answer(question)
     print('\n=== Answer ===')
     print(result['answer'])

@@ -1,62 +1,53 @@
 from __future__ import annotations
 import os
+import requests
 from typing import List
 from langchain_core.documents import Document
-from .config import GEMINI_API_ENDPOINT, GEMINI_API_KEY, GEMINI_MODEL
 from .retrieval import Retriever
 
-try:
-    import google.genai as genai
-    from google.genai.types import HttpOptions
-except ImportError:  # pragma: no cover
-    genai = None
-    HttpOptions = None
 
-
-class GeminiClient:
-    def __init__(self, model_name: str = GEMINI_MODEL, api_key: str = GEMINI_API_KEY, endpoint: str = GEMINI_API_ENDPOINT):
+class OllamaClient:
+    def __init__(self, model_name: str = "mistral", base_url: str = "http://localhost:11434"):
         self.model_name = model_name
-        self.api_key = api_key
-        self.endpoint = endpoint
+        self.base_url = base_url
+        self.api_endpoint = f"{base_url}/api/generate"
+        self.client_available = self._check_availability()
 
-        if genai is None:
-            self.client = None
-            return
-
-        client_kwargs = {}
-        if api_key:
-            client_kwargs['api_key'] = api_key
-        if endpoint and HttpOptions is not None:
-            client_kwargs['http_options'] = HttpOptions(base_url=endpoint)
-
-        # Only instantiate the client when there's an explicit credential or endpoint configured.
-        if client_kwargs:
-            try:
-                self.client = genai.Client(**client_kwargs)
-            except Exception:
-                self.client = None
-        else:
-            self.client = None
+    def _check_availability(self) -> bool:
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=2)
+            return response.status_code == 200
+        except Exception:
+            return False
 
     def is_available(self) -> bool:
-        return self.client is not None
+        return self.client_available
 
     def generate(self, prompt: str) -> str:
-        if self.client is None:
+        if not self.is_available():
             raise RuntimeError(
-                "Gemini client is unavailable. Install google-genai or configure a compatible Gemini SDK."
+                f"Ollama is unavailable at {self.base_url}. Make sure Ollama is running."
             )
 
         try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
+            response = requests.post(
+                self.api_endpoint,
+                json={
+                    "model": self.model_name,
+                    "prompt": prompt,
+                    "stream": False,
+                },
+                timeout=300
             )
-            return response.text or str(response)
-        except Exception:
-            # On any client/runtime error, fall back to returning the prompt
-            # which causes the agent to use the original query or local context.
-            return prompt
+            if response.status_code == 200:
+                return response.json().get("response", "").strip()
+            else:
+                print(f"[Ollama Error] Status {response.status_code}: {response.text}", flush=True)
+                return ""
+        except Exception as e:
+            # On any client/runtime error, print debug info and return empty string
+            print(f"[Ollama Error] {type(e).__name__}: {str(e)}", flush=True)
+            return ""
 
     def rewrite_query(self, query: str) -> str:
         if not self.is_available():
@@ -68,7 +59,9 @@ class GeminiClient:
             f"Question: {query}\n\n"
             "Rewrite:" 
         )
-        return self.generate(prompt).strip()
+        rewritten = self.generate(prompt).strip()
+        # If generation fails, return original query
+        return rewritten if rewritten else query
 
     def answer_question(self, question: str, documents: List[Document]) -> str:
         context = "\n\n".join(
@@ -77,29 +70,32 @@ class GeminiClient:
         )
         if self.is_available():
             prompt = (
-                "You are an expert assistant with 45 years of experience. Use the retrieved document chunks to answer the question. "
+                "You are an expert assistant. Use the retrieved document chunks to answer the question. "
                 "Cite the source file name and page number for each fact you use.\n\n"
                 f"Question: {question}\n\n"
                 f"Context:\n{context}\n\n"
                 "Answer:" 
             )
-            return self.generate(prompt).strip()
+            answer = self.generate(prompt).strip()
+            if not answer:
+                return f"[No answer generated] Retrieved context:\n{context}"
+            return answer
 
         return (
-            "[Gemini unavailable] Retrieved document chunks:\n\n"
+            "[Ollama unavailable] Retrieved document chunks:\n\n"
             f"Question: {question}\n\n{context}"
         )
 
 
 class RAGAgent:
-    def __init__(self, top_k: int = 2) -> None:
+    def __init__(self, top_k: int = 2, model_name: str = "mistral") -> None:
         self.retriever = Retriever(top_k=top_k)
-        self.gemini = GeminiClient()
+        self.llm = OllamaClient(model_name=model_name)
 
     def answer(self, question: str) -> dict:
-        rewritten = self.gemini.rewrite_query(question)
+        rewritten = self.llm.rewrite_query(question)
         documents = self.retriever.retrieve(rewritten)
-        answer = self.gemini.answer_question(rewritten, documents)
+        answer = self.llm.answer_question(rewritten, documents)
 
         return {
             "query": question,
