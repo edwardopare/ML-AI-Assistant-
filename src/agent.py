@@ -92,7 +92,7 @@ class GeminiClient:
 
 
 class RAGAgent:
-    def __init__(self, top_k: int = 5) -> None:
+    def __init__(self, top_k: int = 2) -> None:
         self.retriever = Retriever(top_k=top_k)
         self.gemini = GeminiClient()
 
