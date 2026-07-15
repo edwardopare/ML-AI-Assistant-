@@ -1,0 +1,25 @@
+{
+  "what is natural language processing": {
+    "query": "what is natural language processing",
+    "answer": "According to PDFDrive.com's Introduction to Machine Learning with Python (min.pdf), natural language processing is not explicitly defined in the provided context; however, it can be inferred from source page 339 that NLP involves analyzing text data which includes phrases or sentences found in various sources like tweets and hotel reviews.",
+    "sources": [
+      {
+        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+        "page": 369,
+        "chunk": 1,
+        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      },
+      {
+        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+        "page": 339,
+        "chunk": 2,
+        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      }
+    ],
+    "metrics": {
+      "retrieval_time_s": 0.17,
+      "generation_time_s": 31.25,
+      "total_time_s": 31.42
+    }
+  }
+}

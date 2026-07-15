@@ -21,7 +21,7 @@ def ingest() -> None:
     print(f'Persisted {len(documents)} chunks to {CHROMA_DIR}')
 
 
-def query(question: str, auto_ingest: bool = True, force_ingest: bool = False) -> None:
+def query(question: str, auto_ingest: bool = True, force_ingest: bool = False, stream: bool = False, use_cache: bool = True) -> None:
     if not question.strip():
         print('Please provide a question.')
         return
@@ -32,7 +32,7 @@ def query(question: str, auto_ingest: bool = True, force_ingest: bool = False) -
         print('Ingesting documents...')
         ingest()
     
-    agent = RAGAgent(model_name="phi3")
+    agent = RAGAgent(stream=stream, use_cache=use_cache)
     result = agent.answer(question)
     print('\n=== Answer ===')
     print(result['answer'])
@@ -42,6 +42,12 @@ def query(question: str, auto_ingest: bool = True, force_ingest: bool = False) -
             print(f"- {source.get('source')} page {source.get('page')} chunk {source.get('chunk')}")
     else:
         print('No sources were retrieved.')
+    
+    # Display metrics
+    if 'metrics' in result:
+        print('\n=== Performance ===')
+        metrics = result['metrics']
+        print(f"Retrieval: {metrics['retrieval_time_s']}s | Generation: {metrics['generation_time_s']}s | Total: {metrics['total_time_s']}s")
 
 
 def reset() -> None:
@@ -62,8 +68,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     query_parser.add_argument('question', nargs='+', help='Question text')
     query_parser.add_argument('--no-auto-ingest', action='store_true', help='Disable automatic ingestion if store missing')
     query_parser.add_argument('--force-ingest', action='store_true', help='Force re-ingest before querying')
+    query_parser.add_argument('--stream', action='store_true', help='Stream response in real-time')
+    query_parser.add_argument('--no-cache', action='store_true', help='Disable response caching')
 
     sub.add_parser('reset', help='Remove persisted vector store and start fresh')
+    sub.add_parser('cache-clear', help='Clear response cache')
 
     return parser.parse_args(argv)
 
@@ -76,9 +85,16 @@ def main() -> None:
     elif args.command == 'query':
         auto_ingest = not args.no_auto_ingest if hasattr(args, 'no_auto_ingest') else True
         force_ingest = args.force_ingest if hasattr(args, 'force_ingest') else False
-        query(' '.join(args.question), auto_ingest=auto_ingest, force_ingest=force_ingest)
+        stream = args.stream if hasattr(args, 'stream') else False
+        use_cache = not args.no_cache if hasattr(args, 'no_cache') else True
+        query(' '.join(args.question), auto_ingest=auto_ingest, force_ingest=force_ingest, stream=stream)
     elif args.command == 'reset':
         reset()
+    elif args.command == 'cache-clear':
+        from src.agent import ResponseCache
+        cache = ResponseCache()
+        cache.clear()
+        print('Response cache cleared.')
 
 
 if __name__ == '__main__':
