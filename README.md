@@ -19,13 +19,13 @@ A fully-local, privacy-focused Retrieval-Augmented Generation (RAG) system for P
 
 ## Key Features
 
-- ✨ **100% Local & Private** - Runs entirely on your machine with Ollama
-- ✨ **No API Keys Required** - Zero cloud dependencies
-- ✨ **Auto Model Detection** - Automatically selects fastest available Ollama model
-- ✨ **Response Caching** - Identical queries answered instantly from cache
-- ✨ **Real-time Streaming** - Watch answers generate live with `--stream` flag
-- ✨ **Performance Metrics** - See retrieval/generation/total times
-- ✨ **Low Latency** - ~2-3 min for first query, <1s for cached queries
+- **100% Local & Private** - Runs entirely on your machine with Ollama
+- **No API Keys Required** - Zero cloud dependencies
+- **Auto Model Detection** - Automatically selects fastest available Ollama model
+- **Response Caching** - Identical queries answered instantly from cache
+- **Real-time Streaming** - Watch answers generate live with `--stream` flag
+- **Performance Metrics** - See retrieval/generation/total times
+- **Low Latency** - ~2-3 min for first query, <1s for cached queries
 
 ## Prerequisites
 
