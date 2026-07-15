@@ -101,7 +101,7 @@ python main.py reset
 
 Auto-detects and prefers the fastest available model:
 
-1. **phi3** (2.2 GB) - Fastest ⚡
+1. **phi3** (2.2 GB) - Fastest 
 2. **orca-mini** (3.3 GB) - Fast
 3. **neural-chat** (4.7 GB) - Balanced
 4. **llama3** (4.7 GB) - High quality
