@@ -10,6 +10,10 @@ from src.store import persist_documents
 
 
 def ingest() -> None:
+    """
+    Ingest PDF documents from data/ folder into ChromaDB vector store.
+    Extracts text, generates embeddings, and persists to disk.
+    """
     documents = build_document_chunks()
     if not documents:
         print('No PDF documents found in data/')
@@ -22,6 +26,10 @@ def ingest() -> None:
 
 
 def query(question: str, auto_ingest: bool = True, force_ingest: bool = False, stream: bool = False, use_cache: bool = True) -> None:
+    """
+    Answer a question about the knowledge base.
+    Retrieves relevant documents and generates a response using local LLM.
+    """
     if not question.strip():
         print('Please provide a question.')
         return
@@ -51,6 +59,7 @@ def query(question: str, auto_ingest: bool = True, force_ingest: bool = False, s
 
 
 def reset() -> None:
+    """Delete the vector store and start fresh."""
     if CHROMA_DIR.exists():
         shutil.rmtree(CHROMA_DIR)
         print(f'Removed vector store at {CHROMA_DIR}')
@@ -59,6 +68,7 @@ def reset() -> None:
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description='RAG AI local QA agent')
     sub = parser.add_subparsers(dest='command', required=True)
 
@@ -78,6 +88,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def main() -> None:
+    """Main entry point for CLI."""
     args = parse_args()
 
     if args.command == 'ingest':

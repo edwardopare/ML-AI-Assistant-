@@ -8,4 +8,4 @@ langchain-core
 langchain-community
 sentence-transformers
 torch
-google-genai
+requests

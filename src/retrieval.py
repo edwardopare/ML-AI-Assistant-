@@ -9,6 +9,11 @@ from pathlib import Path
 
 
 class Retriever:
+    """
+    Semantic search retriever for finding relevant document chunks.
+    Uses ChromaDB for vector similarity search or falls back to numpy-based search.
+    """
+
     def __init__(self, top_k: int = 2) -> None:
         self.client = create_client()
         self.collection = get_collection(self.client)
@@ -31,6 +36,10 @@ class Retriever:
                     self.fallback_documents = None
 
     def retrieve(self, query: str, top_k: int | None = None) -> List[Document]:
+        """
+        Retrieve top-k most similar documents for a given query.
+        Uses ChromaDB if available, otherwise falls back to numpy cosine similarity.
+        """
         if not query.strip():
             return []
         query_embedding = self.embedder.embed_texts([query])[0]
@@ -51,7 +60,7 @@ class Retriever:
 
         q = np.array(query_embedding, dtype=np.float32)
         embs = np.array(self.fallback_embeddings, dtype=np.float32)
-        # cosine similarity
+        # Compute cosine similarity between query and all documents
         q_norm = q / (np.linalg.norm(q) + 1e-12)
         embs_norm = embs / (np.linalg.norm(embs, axis=1, keepdims=True) + 1e-12)
         sims = (embs_norm @ q_norm).astype(np.float32)

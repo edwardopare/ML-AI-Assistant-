@@ -22,6 +22,7 @@ def store_exists(persist_directory: Path = CHROMA_DIR) -> bool:
 
 
 def create_client(persist_directory: Path = CHROMA_DIR) -> chromadb.PersistentClient:
+    """Create a ChromaDB client, with fallback for Windows path issues."""
     persist_directory.mkdir(parents=True, exist_ok=True)
     # Prefer a project-relative POSIX path to avoid Windows drive-letter syntax issues
     try:
@@ -45,7 +46,9 @@ def create_client(persist_directory: Path = CHROMA_DIR) -> chromadb.PersistentCl
         # Fall back to a file-based store when chromadb bindings are unavailable.
         return None
 
+
 def get_collection(client: chromadb.PersistentClient, name: str = "rag_documents"):
+    """Get or create a ChromaDB collection."""
     if client is None:
         return None
     try:
@@ -53,12 +56,17 @@ def get_collection(client: chromadb.PersistentClient, name: str = "rag_documents
     except ValueError:
         return client.create_collection(name=name)
 
+
 def persist_documents(
     documents: list[dict],
     embeddings: list[list[float]],
     persist_directory: Path = CHROMA_DIR,
     collection_name: str = "rag_documents",
 ):
+    """
+    Save documents and embeddings to ChromaDB.
+    Falls back to numpy/JSON file storage if ChromaDB is unavailable.
+    """
     client = create_client(persist_directory)
     if client is not None:
         collection = get_collection(client, collection_name)

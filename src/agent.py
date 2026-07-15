@@ -10,6 +10,11 @@ from .retrieval import Retriever
 
 
 class OllamaClient:
+    """
+    Client for interacting with local Ollama API.
+    Handles model inference, auto-detection, and streaming responses.
+    """
+
     def __init__(self, model_name: str | None = None, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
         self.api_endpoint = f"{base_url}/api/generate"
@@ -17,6 +22,7 @@ class OllamaClient:
         self.model_name = model_name or self._auto_detect_model()
 
     def _check_availability(self) -> bool:
+        """Check if Ollama server is running and accessible."""
         try:
             response = requests.get(f"{self.base_url}/api/tags", timeout=2)
             return response.status_code == 200
@@ -24,7 +30,7 @@ class OllamaClient:
             return False
 
     def _auto_detect_model(self) -> str:
-        """Auto-detect best available model from Ollama."""
+        """Auto-detect and select the fastest available Ollama model based on priority list."""
         if not self.client_available:
             return "mistral"  # fallback
         
@@ -47,10 +53,11 @@ class OllamaClient:
         return "mistral"
 
     def is_available(self) -> bool:
+        """Check if Ollama client is available."""
         return self.client_available
 
     def generate(self, prompt: str, stream: bool = False) -> str | Generator[str, None, None]:
-        """Generate response from Ollama, optionally streaming."""
+        """Generate response from Ollama, optionally streaming chunks."""
         if not self.is_available():
             raise RuntimeError(
                 f"Ollama is unavailable at {self.base_url}. Make sure Ollama is running."
@@ -81,7 +88,7 @@ class OllamaClient:
             return ""
 
     def _stream_response(self, response) -> Generator[str, None, None]:
-        """Stream response line by line."""
+        """Stream response line by line from Ollama."""
         for line in response.iter_lines():
             if line:
                 try:
@@ -91,7 +98,7 @@ class OllamaClient:
                     continue
 
     def answer_question(self, question: str, documents: List[Document], stream: bool = False) -> str | Generator[str, None, None]:
-        """Generate answer with optional streaming."""
+        """Generate answer from retrieved documents, optionally streaming."""
         # Optimize context: extract top sentences instead of full chunks
         context_parts = []
         for doc in documents:
@@ -129,7 +136,11 @@ class OllamaClient:
 
 
 class ResponseCache:
-    """Simple JSON-based response cache."""
+    """
+    Simple JSON-based response cache for storing and retrieving query results.
+    Enables instant responses for repeated queries.
+    """
+
     def __init__(self, cache_dir: Path = Path("data/.cache")):
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -137,6 +148,7 @@ class ResponseCache:
         self.cache = self._load_cache()
 
     def _load_cache(self) -> dict:
+        """Load cache from JSON file."""
         if self.cache_file.exists():
             try:
                 with open(self.cache_file, 'r', encoding='utf-8') as f:
@@ -146,6 +158,7 @@ class ResponseCache:
         return {}
 
     def _save_cache(self) -> None:
+        """Persist cache to JSON file."""
         try:
             with open(self.cache_file, 'w', encoding='utf-8') as f:
                 json.dump(self.cache, f, indent=2)
@@ -164,12 +177,17 @@ class ResponseCache:
         self._save_cache()
 
     def clear(self) -> None:
-        """Clear cache."""
+        """Clear all cached responses."""
         self.cache.clear()
         self._save_cache()
 
 
 class RAGAgent:
+    """
+    Main RAG agent that orchestrates retrieval and generation.
+    Handles document retrieval, LLM inference, caching, and performance tracking.
+    """
+
     def __init__(self, top_k: int = 2, model_name: str | None = None, use_cache: bool = True, stream: bool = False) -> None:
         self.retriever = Retriever(top_k=top_k)
         self.llm = OllamaClient(model_name=model_name)
@@ -177,7 +195,10 @@ class RAGAgent:
         self.stream = stream
 
     def answer(self, question: str) -> dict:
-        """Answer a question with optional caching and metrics."""
+        """
+        Answer a question using retrieval and generation.
+        Returns cached result if available, otherwise runs full pipeline.
+        """
         start_time = time.time()
         
         # Check cache first
