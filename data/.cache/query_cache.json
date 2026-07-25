@@ -1,163 +1,95 @@
 {
-  "what is natural language processing": {
-    "query": "what is natural language processing",
-    "answer": "According to PDFDrive.com's Introduction to Machine Learning with Python (min.pdf), natural language processing is not explicitly defined in the provided context; however, it can be inferred from source page 339 that NLP involves analyzing text data which includes phrases or sentences found in various sources like tweets and hotel reviews.",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 369,
-        "chunk": 1,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+  "schema_version": 2,
+  "entries": {
+    "bf40bf308fb079e6aacbe4ea062e54bdab25d5dd7b1560acd18c55ffc0a849d0": {
+      "query": "What is cross validation and why is it important?",
+      "answer": "Cross-validation is a technique used in machine learning to assess how a model will generalize to an independent dataset. It involves splitting the dataset into multiple subsets (or folds), training the model on some of these subsets, and validating it on the remaining ones. This process is repeated multiple times, with each subset serving as a test set at least once. The most common method is k-fold cross-validation, where the data is divided into k subsets, and the model is trained and tested k times, each time using a different subset as the test set and the remaining as the training set [S1][S2].\n\nThe importance of cross-validation lies in its ability to provide a more reliable estimate of a model's performance compared to a single train-test split. It helps mitigate the risk of overfitting by ensuring that every data point is used for both training and testing, which leads to a more accurate assessment of the model's ability to generalize to unseen data. Additionally, it provides insights into the model's sensitivity to the selection of the training dataset, as it evaluates the model across multiple different splits of the data [S2].",
+      "citations": {
+        "S1": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 270,
+          "chunk": 2,
+          "retrieval_score": 0.804
+        },
+        "S2": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 268,
+          "chunk": 1,
+          "retrieval_score": 0.5747
+        },
+        "S3": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 266,
+          "chunk": 3,
+          "retrieval_score": 0.5141
+        },
+        "S4": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 281,
+          "chunk": 2,
+          "retrieval_score": 0.511
+        }
       },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 339,
-        "chunk": 2,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      "sources": [
+        {
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "chunk": 2,
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 270,
+          "chunk_sha256": "a9b89f6ef2c23fe268930c5ad319afe2781979211d1f9461ecb3562a8fc55b71",
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.804,
+          "dense_score": 0.72,
+          "lexical_score": 1.0
+        },
+        {
+          "chunk_sha256": "a0d5bde9b012a9344a673babb7240e049a1a5582fa5d96b8e204d0db0a164b18",
+          "page": 268,
+          "chunk": 1,
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.5747,
+          "dense_score": 0.8211,
+          "lexical_score": 0.0
+        },
+        {
+          "chunk": 3,
+          "chunk_sha256": "b7eb0b2a723d68bbed86cda75ca7694b8f2dbfd92fb42aec88abd0c3dea18f96",
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "page": 266,
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.5141,
+          "dense_score": 0.7345,
+          "lexical_score": 0.0
+        },
+        {
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "page": 281,
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "chunk": 2,
+          "chunk_sha256": "e55ba350eb27eb71f871ece80a7d7a957bfe33e0c697642de1f7f2c3c4cf6f68",
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.511,
+          "dense_score": 0.73,
+          "lexical_score": 0.0
+        }
+      ],
+      "metrics": {
+        "retrieval_time_s": 7.928,
+        "generation_time_s": 4.834,
+        "total_time_s": 12.763,
+        "cache_hit": false
       }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.17,
-      "generation_time_s": 31.25,
-      "total_time_s": 31.42
-    }
-  },
-  "what is machine learning": {
-    "query": "what is machine learning",
-    "answer": "Machine learning is about extracting knowledge from data and is a research field at the intersection of statistics, artificial intelligence, and computer science. It is also known as predictive analytics or statistical learning (Introduction to Machine Learning with Python, page 15).",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 15,
-        "chunk": 2,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 15,
-        "chunk": 1,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.37,
-      "generation_time_s": 3.45,
-      "total_time_s": 3.82
-    }
-  },
-  "what is feature engineering": {
-    "query": "what is feature engineering",
-    "answer": "Feature engineering involves the process of explicitly expanding the feature space and selecting appropriate features that enhance the effectiveness of machine learning models (Introduction to Machine Learning with Python, page 264).",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 264,
-        "chunk": 2,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 383,
-        "chunk": 3,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.05,
-      "generation_time_s": 2.6,
-      "total_time_s": 2.65
-    }
-  },
-  "what is the difference between supervised and unsupervised learning": {
-    "query": "what is the difference between supervised and unsupervised learning",
-    "answer": "Supervised learning involves training algorithms on labeled data where the desired output is known, while unsupervised learning deals with data that lacks known outputs, seeking to find patterns or groupings without predefined labels (Introduction to Machine Learning with Python, page 17; page 145).",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 17,
-        "chunk": 4,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 145,
-        "chunk": 1,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.33,
-      "generation_time_s": 2.56,
-      "total_time_s": 2.89
-    }
-  },
-  "give five types of supervised learning algorithms": {
-    "query": "Give five types of supervised learning algorithms",
-    "answer": "Five types of supervised learning algorithms are:\n\n1. Linear Models\n2. Naive Bayes Classifiers\n3. Decision Trees\n4. (Additional information is not provided in the context, as the source file does not list five types.) \n\n(Source: Introduction to Machine Learning with Python (PDFDrive.com)-min.pdf page 6)",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 6,
-        "chunk": 1,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 6,
-        "chunk": 2,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.21,
-      "generation_time_s": 3.64,
-      "total_time_s": 3.85
-    }
-  },
-  "what is decision tree?": {
-    "query": "What is decision tree?",
-    "answer": "A decision tree is a model that learns a sequence of if/else questions to arrive at the most accurate answer, where each node represents a question or a terminal node (leaf) that contains the answer, and the edges connect answers to the questions leading to subsequent questions (Introduction to Machine Learning with Python, page 85).",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 85,
-        "chunk": 2,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 85,
-        "chunk": 1,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.06,
-      "generation_time_s": 5.75,
-      "total_time_s": 5.81
-    }
-  },
-  "what is cross validation and why is it important?": {
-    "query": "What is cross validation and why is it important?",
-    "answer": "Cross-validation is a statistical method used to evaluate the generalization performance of models by repeatedly splitting the data and training multiple models. It is important because it provides a more stable and thorough assessment than a single split into training and test sets (Introduction to Machine Learning with Python, page 266).",
-    "sources": [
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 268,
-        "chunk": 1,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      },
-      {
-        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
-        "page": 266,
-        "chunk": 2,
-        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
-      }
-    ],
-    "metrics": {
-      "retrieval_time_s": 0.15,
-      "generation_time_s": 3.42,
-      "total_time_s": 3.57
     }
   }
 }

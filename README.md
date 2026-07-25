@@ -1,61 +1,73 @@
 # RAG AI
 
-A command-line Retrieval-Augmented Generation (RAG) application for asking
-questions about PDF documents.
+A grounded command-line Retrieval-Augmented Generation (RAG) application for
+asking questions about PDF documents.
 
-PDF parsing, embeddings, and semantic retrieval run locally. The retrieved
-context is sent to an OpenRouter model to generate the final answer.
+Document parsing, embeddings, indexing, and retrieval run locally. Only the
+question and selected evidence chunks are sent to an OpenRouter model for
+answer generation.
 
-## Features
+## Capabilities
 
-- Extracts and chunks text from PDF files
-- Generates local embeddings with Sentence Transformers
-- Stores and searches vectors with ChromaDB
-- Uses LLM for answer generation
-- Includes source file and page metadata in results
-- Supports streamed responses
-- Caches repeated questions
-- Reports retrieval, generation, and total response times
+- Recursive PDF discovery and per-file ingestion error reporting
+- Sentence- and paragraph-aware overlapping chunks
+- Normalized local embeddings with Sentence Transformers
+- Persistent cosine-vector storage with ChromaDB
+- Hybrid dense and BM25 retrieval
+- Relevance filtering and MMR diversity reranking
+- Grounded prompting with validated evidence identifiers
+- Optional streamed OpenRouter responses
+- Retries for rate limits and transient provider errors
+- Corpus- and model-aware response caching
+- Index manifests that detect incompatible configuration changes
+- Optional OCR for scanned pages
+- Retrieval and generation timing
 
-## How It Works
+## Architecture
 
 ```text
-PDF files
-   |
-   v
-Text extraction and chunking
-   |
-   v
-Local embeddings
-   |
-   v
-ChromaDB vector store
-   |
-   v
-Semantic retrieval -- top relevant chunks
-   |
-   v
-LLM -- generated answer with sources
+PDFs in data/
+      |
+      v
+PDF text extraction ---- optional OCR
+      |
+      v
+Sentence-aware chunking + source metadata + content hashes
+      |
+      v
+Normalized local embeddings
+      |
+      v
+Persistent ChromaDB index + versioned manifest
+      |
+      v
+Dense search + BM25 lexical search
+      |
+      v
+Score threshold + MMR reranking
+      |
+      v
+Complete evidence chunks with [S1], [S2] identifiers
+      |
+      v
+OpenRouter generation + citation validation
 ```
 
-The application has two main workflows:
-
-1. **Ingestion:** PDFs in `data/` are converted into chunks, embedded locally,
-   and saved in `.chromadb/`.
-2. **Querying:** A question is embedded locally, matched against the stored
-   chunks, and sent to OpenRouter with the retrieved context.
+When retrieval finds no evidence above the configured threshold, the
+application does not call the LLM. It reports that the indexed documents do
+not contain sufficiently relevant information.
 
 ## Requirements
 
-- Python 3.14 or later, as currently specified in `pyproject.toml`
-- An OpenRouter account and API key
+- Python 3.10 or later
+- An OpenRouter API key
 - Internet access for OpenRouter and the initial embedding-model download
 
-Ollama and Gemini are not required.
+Ollama and Gemini are not used.
 
 ## Installation
 
-### 1. Create and activate a virtual environment
+Create and activate a virtual environment.
 
 PowerShell:
 
@@ -71,180 +83,273 @@ python -m venv env
 source env/bin/activate
 ```
 
-### 2. Install dependencies
+Install the application dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure Model
+For development and tests:
 
-```powershell
-Create a .env file
+```bash
+pip install -e ".[dev]"
 ```
 
-On macOS or Linux:
+## OpenRouter Configuration
+
+Copy the environment template:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+macOS or Linux:
 
 ```bash
 cp .env.example .env
 ```
 
+Edit `.env`:
+
 ```dotenv
-Your_API_KEY=your_key_here
-Your_MODEL=********
+OPENROUTER_API_KEY=your_rotated_key
+OPENROUTER_MODEL=openai/gpt-4o-mini
 ```
 
-The `.env` file is ignored by Git. Never commit or share an API key. If a key
-has been exposed, revoke it and create a new one.
+The `.env` file is ignored by Git. Never commit an API key. Revoke and replace
+any key that has been pasted into source code, chat, logs, or screenshots.
 
-## Configuration
+## Configuration Reference
 
-All settings are optional except `OPENROUTER_API_KEY`.
+### Generation
 
-| Variable | Default | Purpose |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `Your_API_KEY` | None | Authenticates requests to OpenRouter |
-| `Your_MODEL` | `openai/gpt-4o-mini` | OpenRouter model identifier |
-| `BASE_URL` | `https://openrouter.ai/api/v1` | OpenRouter API base URL |
-| `EMBEDDING_MODEL_NAME` | `all-MiniLM-L6-v2` | Local Sentence Transformers model |
-| `TEXT_CHUNK_SIZE` | `1000` | Maximum characters in each document chunk |
-| `TEXT_CHUNK_OVERLAP` | `200` | Characters shared between adjacent chunks |
+| `OPENROUTER_API_KEY` | None | Required OpenRouter credential |
+| `OPENROUTER_MODEL` | `openai/gpt-4o-mini` | OpenRouter model identifier |
+| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | API base URL |
+| `OPENROUTER_TIMEOUT_SECONDS` | `120` | HTTP timeout |
+| `OPENROUTER_MAX_RETRIES` | `3` | Retries for network, `429`, and `5xx` errors |
+| `OPENROUTER_MAX_TOKENS` | `800` | Maximum generated tokens |
+| `OPENROUTER_TEMPERATURE` | `0.1` | Generation randomness |
+| `MAX_CONTEXT_CHARS` | `12000` | Evidence budget sent to the LLM |
+
+### Ingestion and retrieval
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `EMBEDDING_MODEL_NAME` | `all-MiniLM-L6-v2` | Local embedding model |
+| `TEXT_CHUNK_SIZE` | `1200` | Approximate maximum chunk characters |
+| `TEXT_CHUNK_OVERLAP` | `200` | Context shared by adjacent chunks |
+| `ENABLE_OCR` | `false` | OCR pages without extractable text |
+| `RETRIEVAL_TOP_K` | `4` | Final evidence chunks |
+| `RETRIEVAL_CANDIDATE_K` | `12` | Candidates considered by each retriever |
+| `RETRIEVAL_MIN_SCORE` | `0.25` | Minimum combined relevance score |
+| `RETRIEVAL_DENSE_WEIGHT` | `0.7` | Dense share of the dense/BM25 score |
+| `RETRIEVAL_MMR_LAMBDA` | `0.75` | Relevance-versus-diversity balance |
+
+Changing the embedding model or chunk settings makes an existing index
+incompatible. The CLI will request re-ingestion instead of querying mismatched
+vectors.
 
 ## Usage
 
-### 1. Add documents
+Place PDFs anywhere under `data/`. Nested folders are supported.
 
-Place one or more `.pdf` files directly inside the `data/` directory.
-
-### 2. Build the vector store
+Build or completely rebuild the index:
 
 ```bash
 python main.py ingest
 ```
 
-### 3. Ask a question
+Ask a question:
 
 ```bash
-python main.py query "What are the main conclusions?"
+python main.py query "What are the report's main conclusions?"
 ```
 
-If the vector store does not exist, the query command automatically ingests
-the PDFs before answering.
-
-### Stream the answer
+The query command builds a missing index automatically. Other examples:
 
 ```bash
-python main.py query "Summarize the document" --stream
-```
-
-### Force document re-ingestion
-
-Use this after adding, removing, or changing PDFs:
-
-```bash
+python main.py query "Compare the proposed approaches" --stream
+python main.py query "Summarize the risks" --top-k 6
 python main.py query "What changed?" --force-ingest
+python main.py query "Question" --no-auto-ingest
+python main.py query "Question" --no-cache
 ```
 
-### Disable automatic ingestion
+Maintenance commands:
 
 ```bash
-python main.py query "Your question" --no-auto-ingest
+python main.py cache-clear
+python main.py reset
 ```
 
-### Bypass the response cache
+`reset` deletes only the configured `.chromadb/` index. Source PDFs are not
+removed.
+
+## Optional OCR
+
+Install the OCR dependencies:
 
 ```bash
-python main.py query "Your question" --no-cache
+pip install -e ".[ocr]"
 ```
 
-## Command Reference
+Install the Tesseract executable separately for your operating system, ensure
+it is available on `PATH`, and set:
 
-| Command | Description |
-| --- | --- |
-| `python main.py ingest` | Process PDFs and build the vector store |
-| `python main.py query "..."` | Retrieve context and generate an answer |
-| `python main.py cache-clear` | Clear cached answers |
-| `python main.py reset` | Delete the persisted vector store |
+```dotenv
+ENABLE_OCR=true
+```
 
-Query options:
+OCR is attempted only for pages where normal PDF extraction returns no text.
 
-| Option | Description |
-| --- | --- |
-| `--stream` | Print generated text as it arrives |
-| `--force-ingest` | Rebuild the document index before querying |
-| `--no-auto-ingest` | Do not ingest automatically when the index is missing |
-| `--no-cache` | Do not read or write a cached answer |
+## Evidence and Citations
+
+Retrieved chunks are assigned evidence IDs such as `[S1]`. The model is
+instructed to cite factual claims using these IDs. Unknown IDs in a generated
+answer are marked invalid, and the CLI prints the authoritative source, page,
+and chunk mapping separately.
+
+Retrieval metadata also includes:
+
+- Combined retrieval score
+- Dense similarity score
+- Lexical BM25 score
+- Final retrieval rank
+
+## Index and Cache Lifecycle
+
+Each ingestion replaces the collection, which prevents chunks from removed or
+shortened PDFs from remaining searchable.
+
+`.chromadb/index_manifest.json` records:
+
+- Corpus fingerprint
+- Index schema version
+- Embedding model and dimension
+- Chunk settings
+- Source and chunk counts
+- Ingestion timestamp
+
+Answer-cache keys include the corpus fingerprint, question, OpenRouter model,
+retrieval count, prompt version, temperature, and output limit. Changing the
+corpus or generation configuration therefore does not return an old answer.
 
 ## Project Structure
 
 ```text
 RAG AI/
-|-- data/                  PDF documents and response cache
+|-- data/                   PDF inputs and generated answer cache
 |-- src/
-|   |-- agent.py           OpenRouter generation and response caching
-|   |-- config.py          Environment and path configuration
-|   |-- embeddings.py      Local embedding model
-|   |-- ingest.py          PDF extraction and text chunking
-|   |-- retrieval.py       Semantic similarity search
-|   `-- store.py           ChromaDB persistence and file fallback
-|-- .env.example           Environment-variable template
-|-- main.py                Command-line entry point
-|-- requirements.txt       Python dependencies
-`-- pyproject.toml         Project metadata
+|   |-- agent.py            OpenRouter, grounding, citations, and cache
+|   |-- config.py           Validated environment configuration
+|   |-- embeddings.py       Normalized local embeddings
+|   |-- ingest.py           PDF extraction, OCR, hashing, and chunking
+|   |-- retrieval.py        Dense/BM25 retrieval and MMR
+|   `-- store.py            Chroma lifecycle and index manifest
+|-- tests/                  Offline unit and integration tests
+|-- .env.example            Safe environment template
+|-- main.py                 CLI entry point
+|-- pyproject.toml          Package and optional dependency metadata
+`-- requirements.txt        Runtime dependencies
 ```
 
-Generated data is stored in:
+Generated state:
 
-- `.chromadb/` for the vector index
-- `data/.cache/query_cache.json` for cached answers
+- `.chromadb/` contains the vector index and manifest.
+- `data/.cache/query_cache.json` contains generated-answer cache entries.
+
+Both are excluded from Git.
 
 ## Privacy and Security
 
-Document ingestion and similarity search happen locally. During a query, the
-question and retrieved document excerpts are sent to OpenRouter and the
-selected model provider. Do not use sensitive documents unless that data flow
-meets your privacy requirements.
+PDF extraction, embeddings, and retrieval are local. For each non-empty
+retrieval, the question and selected document chunks are transmitted to
+OpenRouter and the selected downstream model provider.
 
-Keep `.env` private and rotate any API key that is accidentally exposed.
+Retrieved documents are treated as untrusted data in the prompt. Instructions
+inside a PDF are explicitly excluded from the model's instruction hierarchy.
+This reduces prompt-injection risk but cannot provide an absolute security
+guarantee.
+
+Review OpenRouter and model-provider data policies before processing sensitive
+documents.
+
+## Testing
+
+Run the offline suite:
+
+```bash
+pytest
+```
+
+The tests cover:
+
+- Chunking and configuration validation
+- Recursive PDF discovery
+- Real Chroma persistence on a path containing spaces
+- Dense/BM25 retrieval
+- Stale-document removal during re-ingestion
+- Safe empty-evidence behavior
+- Citation handling
+- OpenRouter HTTP and streaming errors
+- Versioned atomic caching
+- CLI parsing
+
+OpenRouter is mocked; tests do not consume API credits.
 
 ## Troubleshooting
 
-### `OPENROUTER_API_KEY is not set`
+### The index is incompatible
 
-Create `.env` from `.env.example`, add a valid key, and run the command from
-the project root.
-
-### OpenRouter returns `401 Unauthorized`
-
-Confirm that the API key is correct, active, and has not been revoked.
-
-### OpenRouter reports a model error
-
-Set `OPENROUTER_MODEL` to a valid model identifier available to your account.
-
-### No PDF documents found
-
-Add `.pdf` files directly to `data/`. PDFs inside nested folders are not
-currently discovered.
-
-### Answers do not reflect updated documents
-
-Rebuild the index and bypass old cached responses:
+The embedding model, vector dimension, chunk settings, or schema changed:
 
 ```bash
 python main.py ingest
-python main.py cache-clear
 ```
 
-### First run is slow
+### No sufficiently relevant information was found
 
-Sentence Transformers may download the embedding model on first use. Later
-runs reuse the local model files.
+The result is below `RETRIEVAL_MIN_SCORE`. Confirm that the correct PDFs were
+indexed. If evaluation shows valid evidence is regularly rejected, lower the
+threshold carefully.
 
-## Current Limitations
+### OpenRouter authentication failed
 
-- Only PDF documents are supported
-- PDFs are discovered only at the top level of `data/`
-- Scanned PDFs require OCR before ingestion
-- Retrieval currently uses the two most relevant chunks
-- Citations depend on metadata and model compliance
+Confirm that `OPENROUTER_API_KEY` is current and has not been revoked.
+
+### OpenRouter returns rate-limit or server errors
+
+Transient `429` and `5xx` responses are retried automatically. Persistent
+failures are returned as errors and are not cached.
+
+### A scanned PDF produces no text
+
+Enable optional OCR, or OCR the document before placing it in `data/`.
+
+### Answers do not reflect changed PDFs
+
+Re-run ingestion. The new corpus fingerprint automatically separates new
+answers from old cache entries:
+
+```bash
+python main.py ingest
+```
+
+### First execution is slow
+
+Sentence Transformers downloads the embedding model on first use. Later runs
+reuse the local model files.
+
+## Remaining Trade-offs
+
+- BM25 currently scans stored chunk text and is intended for small or
+  medium-sized local collections.
+- OCR quality depends on scan quality, language data, and Tesseract.
+- Table structure from complex PDFs may not be preserved perfectly.
+- Citation correctness still depends partly on model behavior, although
+  evidence IDs are validated.
+- Retrieval thresholds should be tuned against a representative evaluation
+  set for the target documents.

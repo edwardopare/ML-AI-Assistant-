@@ -9,4 +9,8 @@ wheels/
 # Virtual environments
 env
 .env
+.env.*
+.env.example
 .chromadb
+data/.cache/
+.pytest_cache/
