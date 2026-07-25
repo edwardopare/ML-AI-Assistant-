@@ -10,10 +10,6 @@ from .config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 
 
 class OpenRouterClient:
-    """
-    Client for OpenRouter's OpenAI-compatible chat completions API.
-    """
-
     def __init__(self, model_name: str | None = None):
         self.api_endpoint = f"{OPENROUTER_BASE_URL}/chat/completions"
         self.api_key = OPENROUTER_API_KEY
@@ -104,11 +100,6 @@ class OpenRouterClient:
 
 
 class ResponseCache:
-    """
-    Simple JSON-based response cache for storing and retrieving query results.
-    Enables instant responses for repeated queries.
-    """
-
     def __init__(self, cache_dir: Path = Path("data/.cache")):
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -151,11 +142,6 @@ class ResponseCache:
 
 
 class RAGAgent:
-    """
-    Main RAG agent that orchestrates retrieval and generation.
-    Handles document retrieval, LLM inference, caching, and performance tracking.
-    """
-
     def __init__(self, top_k: int = 2, model_name: str | None = None, use_cache: bool = True, stream: bool = False) -> None:
         self.retriever = Retriever(top_k=top_k)
         self.llm = OpenRouterClient(model_name=model_name)

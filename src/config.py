@@ -1,7 +1,3 @@
-"""
-Configuration module for RAG AI system.
-Loads environment variables and sets up paths, models, and parameters.
-"""
 from __future__ import annotations
 import os
 from pathlib import Path

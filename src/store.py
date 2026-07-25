@@ -24,15 +24,12 @@ def store_exists(persist_directory: Path = CHROMA_DIR) -> bool:
 def create_client(persist_directory: Path = CHROMA_DIR) -> chromadb.PersistentClient:
     """Create a ChromaDB client, with fallback for Windows path issues."""
     persist_directory.mkdir(parents=True, exist_ok=True)
-    # Prefer a project-relative POSIX path to avoid Windows drive-letter syntax issues
     try:
         rel_path = persist_directory.resolve().relative_to(Path.cwd())
         persist_dir_str = rel_path.as_posix()
     except Exception:
         persist_dir_str = persist_directory.resolve().as_posix()
 
-    # If the path contains spaces or other problematic characters on Windows,
-    # fall back to a temp directory without spaces to avoid Rust binding errors.
     if ' ' in persist_dir_str:
         fallback = Path(tempfile.gettempdir()) / 'rag_ai_chromadb'
         fallback.mkdir(parents=True, exist_ok=True)
@@ -43,7 +40,6 @@ def create_client(persist_directory: Path = CHROMA_DIR) -> chromadb.PersistentCl
             Settings(chroma_db_impl="duckdb+parquet", persist_directory=persist_dir_str)
         )
     except Exception:
-        # Fall back to a file-based store when chromadb bindings are unavailable.
         return None
 
 
@@ -63,10 +59,7 @@ def persist_documents(
     persist_directory: Path = CHROMA_DIR,
     collection_name: str = "rag_documents",
 ):
-    """
-    Save documents and embeddings to ChromaDB.
-    Falls back to numpy/JSON file storage if ChromaDB is unavailable.
-    """
+    """Persist documents and embeddings to ChromaDB or fallback files."""
     client = create_client(persist_directory)
     if client is not None:
         collection = get_collection(client, collection_name)

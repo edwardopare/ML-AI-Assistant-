@@ -1,119 +1,250 @@
-# RAG AI - Retrieval-Augmented Generation
+# RAG AI
 
-A RAG system for PDF documents. Retrieval and embeddings run locally; answer generation uses OpenRouter.
+A command-line Retrieval-Augmented Generation (RAG) application for asking
+questions about PDF documents.
 
-## Architecture
+PDF parsing, embeddings, and semantic retrieval run locally. The retrieved
+context is sent to an OpenRouter model to generate the final answer.
 
-**Document Processing:**
-- PDFs are extracted with `pypdf`
-- Text is split into overlapping chunks
-- Embeddings are generated with `sentence-transformers` (all-MiniLM-L6-v2)
-- ChromaDB stores text chunks, vectors, and metadata for fast semantic search
+## Features
 
-**Query Processing:**
-- Questions are used directly to search ChromaDB (no query rewriting for speed)
-- Top-2 relevant document chunks are retrieved via cosine similarity
-- A configurable OpenRouter model synthesizes answers from retrieved context
-- Responses are cached for instant retrieval on repeat queries
-- Performance metrics tracked for visibility into latency
+- Extracts and chunks text from PDF files
+- Generates local embeddings with Sentence Transformers
+- Stores and searches vectors with ChromaDB
+- Uses LLM for answer generation
+- Includes source file and page metadata in results
+- Supports streamed responses
+- Caches repeated questions
+- Reports retrieval, generation, and total response times
 
-## Key Features
+## How It Works
 
-- **Local Retrieval** - PDF processing, embeddings, and vector search stay on your machine
-- **OpenRouter Generation** - Use any compatible model available to your OpenRouter account
-- **Response Caching** - Identical queries answered instantly from cache
-- **Real-time Streaming** - Watch answers generate live with `--stream` flag
-- **Performance Metrics** - See retrieval/generation/total times
-- **Low Latency** - ~2-3 min for first query, <1s for cached queries
+```text
+PDF files
+   |
+   v
+Text extraction and chunking
+   |
+   v
+Local embeddings
+   |
+   v
+ChromaDB vector store
+   |
+   v
+Semantic retrieval -- top relevant chunks
+   |
+   v
+LLM -- generated answer with sources
+```
 
-## Prerequisites
+The application has two main workflows:
 
-- Python 3.9+
-- An OpenRouter API key
+1. **Ingestion:** PDFs in `data/` are converted into chunks, embedded locally,
+   and saved in `.chromadb/`.
+2. **Querying:** A question is embedded locally, matched against the stored
+   chunks, and sent to OpenRouter with the retrieved context.
 
-## Setup
+## Requirements
 
-1. Activate the virtual environment:
+- Python 3.14 or later, as currently specified in `pyproject.toml`
+- An OpenRouter account and API key
+- Internet access for OpenRouter and the initial embedding-model download
+
+Ollama and Gemini are not required.
+
+## Installation
+
+### 1. Create and activate a virtual environment
+
+PowerShell:
 
 ```powershell
+python -m venv env
 & .\env\Scripts\Activate.ps1
 ```
 
-2. Install dependencies:
+macOS or Linux:
 
-```powershell
+```bash
+python -m venv env
+source env/bin/activate
+```
+
+### 2. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-3. Copy the environment template and add your API key:
+### 3. Configure Model
 
 ```powershell
-Copy-Item .env.example .env
-# Edit .env and replace the placeholder with your rotated OpenRouter key.
+Create a .env file
 ```
 
-The default model is `openai/gpt-4o-mini`. Change `OPENROUTER_MODEL` in `.env`
-to another OpenRouter model identifier if desired.
+On macOS or Linux:
+
+```bash
+cp .env.example .env
+```
+
+```dotenv
+Your_API_KEY=your_key_here
+Your_MODEL=********
+```
+
+The `.env` file is ignored by Git. Never commit or share an API key. If a key
+has been exposed, revoke it and create a new one.
+
+## Configuration
+
+All settings are optional except `OPENROUTER_API_KEY`.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `Your_API_KEY` | None | Authenticates requests to OpenRouter |
+| `Your_MODEL` | `openai/gpt-4o-mini` | OpenRouter model identifier |
+| `BASE_URL` | `https://openrouter.ai/api/v1` | OpenRouter API base URL |
+| `EMBEDDING_MODEL_NAME` | `all-MiniLM-L6-v2` | Local Sentence Transformers model |
+| `TEXT_CHUNK_SIZE` | `1000` | Maximum characters in each document chunk |
+| `TEXT_CHUNK_OVERLAP` | `200` | Characters shared between adjacent chunks |
 
 ## Usage
 
-**Ingest PDFs** from `data/` folder into vector store:
+### 1. Add documents
 
-```powershell
+Place one or more `.pdf` files directly inside the `data/` directory.
+
+### 2. Build the vector store
+
+```bash
 python main.py ingest
 ```
 
-**Ask a question:**
+### 3. Ask a question
 
-```powershell
-python main.py query "What is machine learning?"
+```bash
+python main.py query "What are the main conclusions?"
 ```
 
-**Stream responses in real-time:**
+If the vector store does not exist, the query command automatically ingests
+the PDFs before answering.
 
-```powershell
-python main.py query "What is Python?" --stream
+### Stream the answer
+
+```bash
+python main.py query "Summarize the document" --stream
 ```
 
-**Disable caching** for a query:
+### Force document re-ingestion
 
-```powershell
-python main.py query "What is NumPy?" --no-cache
+Use this after adding, removing, or changing PDFs:
+
+```bash
+python main.py query "What changed?" --force-ingest
 ```
 
-**Force re-ingestion:**
+### Disable automatic ingestion
 
-```powershell
-python main.py query "What is scikit-learn?" --force-ingest
+```bash
+python main.py query "Your question" --no-auto-ingest
 ```
 
-**Clear response cache:**
+### Bypass the response cache
 
-```powershell
-python main.py cache-clear
+```bash
+python main.py query "Your question" --no-cache
 ```
 
-**Reset the vector store:**
+## Command Reference
 
-```powershell
-python main.py reset
+| Command | Description |
+| --- | --- |
+| `python main.py ingest` | Process PDFs and build the vector store |
+| `python main.py query "..."` | Retrieve context and generate an answer |
+| `python main.py cache-clear` | Clear cached answers |
+| `python main.py reset` | Delete the persisted vector store |
+
+Query options:
+
+| Option | Description |
+| --- | --- |
+| `--stream` | Print generated text as it arrives |
+| `--force-ingest` | Rebuild the document index before querying |
+| `--no-auto-ingest` | Do not ingest automatically when the index is missing |
+| `--no-cache` | Do not read or write a cached answer |
+
+## Project Structure
+
+```text
+RAG AI/
+|-- data/                  PDF documents and response cache
+|-- src/
+|   |-- agent.py           OpenRouter generation and response caching
+|   |-- config.py          Environment and path configuration
+|   |-- embeddings.py      Local embedding model
+|   |-- ingest.py          PDF extraction and text chunking
+|   |-- retrieval.py       Semantic similarity search
+|   `-- store.py           ChromaDB persistence and file fallback
+|-- .env.example           Environment-variable template
+|-- main.py                Command-line entry point
+|-- requirements.txt       Python dependencies
+`-- pyproject.toml         Project metadata
 ```
 
-## Performance
+Generated data is stored in:
 
-| Metric | Time |
-|--------|------|
-| First Query | ~2-3 minutes |
-| Cached Query | <1 second |
-| Retrieval | ~1-2 seconds |
-| Generation | Depends on the selected OpenRouter model |
+- `.chromadb/` for the vector index
+- `data/.cache/query_cache.json` for cached answers
+
+## Privacy and Security
+
+Document ingestion and similarity search happen locally. During a query, the
+question and retrieved document excerpts are sent to OpenRouter and the
+selected model provider. Do not use sensitive documents unless that data flow
+meets your privacy requirements.
+
+Keep `.env` private and rotate any API key that is accidentally exposed.
 
 ## Troubleshooting
 
-**`OPENROUTER_API_KEY is not set`** - Create `.env` from `.env.example` and add
-your rotated key.
+### `OPENROUTER_API_KEY is not set`
 
-**OpenRouter 401 error** - Check that the key is current and has not been revoked.
+Create `.env` from `.env.example`, add a valid key, and run the command from
+the project root.
 
-**OpenRouter model error** - Set `OPENROUTER_MODEL` to a model identifier your
-account can access.
+### OpenRouter returns `401 Unauthorized`
+
+Confirm that the API key is correct, active, and has not been revoked.
+
+### OpenRouter reports a model error
+
+Set `OPENROUTER_MODEL` to a valid model identifier available to your account.
+
+### No PDF documents found
+
+Add `.pdf` files directly to `data/`. PDFs inside nested folders are not
+currently discovered.
+
+### Answers do not reflect updated documents
+
+Rebuild the index and bypass old cached responses:
+
+```bash
+python main.py ingest
+python main.py cache-clear
+```
+
+### First run is slow
+
+Sentence Transformers may download the embedding model on first use. Later
+runs reuse the local model files.
+
+## Current Limitations
+
+- Only PDF documents are supported
+- PDFs are discovered only at the top level of `data/`
+- Scanned PDFs require OCR before ingestion
+- Retrieval currently uses the two most relevant chunks
+- Citations depend on metadata and model compliance

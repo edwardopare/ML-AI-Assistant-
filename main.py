@@ -10,10 +10,6 @@ from src.store import persist_documents
 
 
 def ingest() -> None:
-    """
-    Ingest PDF documents from data/ folder into ChromaDB vector store.
-    Extracts text, generates embeddings, and persists to disk.
-    """
     documents = build_document_chunks()
     if not documents:
         print('No PDF documents found in data/')

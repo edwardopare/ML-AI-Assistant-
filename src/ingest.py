@@ -23,7 +23,6 @@ def extract_pdf_text(pdf_path: Path) -> List[tuple[int, str]]:
 
 
 def chunk_text(text: str, chunk_size: int = TEXT_CHUNK_SIZE, overlap: int = TEXT_CHUNK_OVERLAP) -> List[str]:
-    """Split text into overlapping chunks for better context retention."""
     if not text:
         return []
 
@@ -50,10 +49,6 @@ def build_document_chunks(
     chunk_size: int = TEXT_CHUNK_SIZE,
     overlap: int = TEXT_CHUNK_OVERLAP,
 ) -> List[dict]:
-    """
-    Extract and chunk all PDF documents in a directory.
-    Returns list of document chunks with metadata (source, page, chunk index).
-    """
     documents: List[dict] = []
 
     for pdf_path in load_pdf_paths(pdf_dir):
