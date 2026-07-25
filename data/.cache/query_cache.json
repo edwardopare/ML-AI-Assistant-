@@ -90,6 +90,96 @@
         "total_time_s": 12.763,
         "cache_hit": false
       }
+    },
+    "157f14cef357339e6ee5699b6bc7e61b8653b90ab8389821e1b1a44bb857e484": {
+      "query": "how should i work with text data",
+      "answer": "To work with text data, you should follow these steps:\n\n1. **Understand the Nature of Text Data**: Text data is typically represented as strings, which can vary in length and may sometimes represent categorical variables rather than just plain text. It's important to analyze the data to determine how to treat each string feature appropriately [S1].\n\n2. **Preprocessing**: Before applying machine learning algorithms, you need to process the text data. This may involve cleaning the text, removing unnecessary characters (like HTML tags), and possibly converting the text into a format suitable for analysis [S1][S4].\n\n3. **Utilize Appropriate Tools**: Consider using libraries and frameworks that facilitate text processing and natural language processing (NLP). For example, recurrent neural networks (RNNs) are effective for tasks like automatic translation and summarization [S2].\n\n4. **Evaluate Complexity**: While experimenting with different models and techniques, avoid overcomplicating your processes. Ensure that every component included in your model is necessary and contributes to its effectiveness [S3].\n\nBy following these guidelines, you can effectively manage and analyze text data in your machine learning projects.",
+      "citations": {
+        "S1": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 337,
+          "chunk": 2,
+          "retrieval_score": 0.8135
+        },
+        "S2": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 370,
+          "chunk": 1,
+          "retrieval_score": 0.5062
+        },
+        "S3": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 335,
+          "chunk": 1,
+          "retrieval_score": 0.5262
+        },
+        "S4": {
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 340,
+          "chunk": 3,
+          "retrieval_score": 0.4938
+        }
+      },
+      "sources": [
+        {
+          "page": 337,
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "chunk_sha256": "3fd8c330cbd520b19d74e4d7f146b4881d3633a47133725cf4930efd8f4ef99e",
+          "chunk": 2,
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.8135,
+          "dense_score": 0.7788,
+          "lexical_score": 0.8943
+        },
+        {
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "chunk_sha256": "eedc1c6d78674cf00f6aa98d4d4b4173b377eefc7862c146e58436cfaa007e2e",
+          "page": 370,
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "chunk": 1,
+          "retrieval_rank": 2,
+          "retrieval_score": 0.5062,
+          "dense_score": 0.7231,
+          "lexical_score": 0.0
+        },
+        {
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "chunk_sha256": "8b13c5339dc0d685a4c188776be6d3a94ac569da192ec4b519403ec813347b07",
+          "page": 335,
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "chunk": 1,
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.5262,
+          "dense_score": 0.7517,
+          "lexical_score": 0.0
+        },
+        {
+          "relative_path": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "chunk": 3,
+          "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+          "page": 340,
+          "file_sha256": "e14ec67845debe6a86e8b30a65f540589ad24a99ab1f45135caed8ffcfe52c40",
+          "chunk_sha256": "10a8a79cfcfd05215f434e5c52fb9383290ca4542d2c652f7b5733a182fdd7ca",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.4938,
+          "dense_score": 0.7054,
+          "lexical_score": 0.0
+        }
+      ],
+      "metrics": {
+        "retrieval_time_s": 8.372,
+        "generation_time_s": 4.912,
+        "total_time_s": 13.284,
+        "cache_hit": false
+      }
     }
   }
 }

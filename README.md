@@ -250,7 +250,6 @@ RAG AI/
 |   |-- retrieval.py        Dense/BM25 retrieval and MMR
 |   `-- store.py            Chroma lifecycle and index manifest
 |-- tests/                  Offline unit and integration tests
-|-- .env.example            Safe environment template
 |-- main.py                 CLI entry point
 |-- pyproject.toml          Package and optional dependency metadata
 `-- requirements.txt        Runtime dependencies
