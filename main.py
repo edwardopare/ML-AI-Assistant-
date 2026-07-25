@@ -1,4 +1,3 @@
-"""Command-line interface for the PDF RAG application."""
 from __future__ import annotations
 
 import argparse
@@ -17,6 +16,7 @@ from src.store import (
 )
 
 
+# Ingest PDFs and rebuild the persistent document index.
 def ingest() -> bool:
     report = build_document_chunks_with_report()
     for warning in report.warnings:
@@ -48,6 +48,7 @@ def ingest() -> bool:
     return True
 
 
+# Answer a question using indexed evidence and OpenRouter generation.
 def query(
     question: str,
     *,
@@ -102,6 +103,7 @@ def query(
     return True
 
 
+# Build and parse the command-line interface.
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Grounded PDF question answering powered by OpenRouter"
@@ -146,6 +148,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+# Dispatch the selected command and return its exit code.
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     if args.command == "ingest":

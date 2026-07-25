@@ -1,9 +1,6 @@
-"""Application configuration loaded from environment variables."""
 from __future__ import annotations
-
 import os
 from pathlib import Path
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,7 +14,7 @@ COLLECTION_NAME = "rag_documents"
 INDEX_SCHEMA_VERSION = 2
 PROMPT_VERSION = 2
 
-
+# Read and validate an integer environment variable.
 def _int_env(name: str, default: int, minimum: int = 0) -> int:
     raw = os.getenv(name, str(default)).strip()
     try:
@@ -29,6 +26,7 @@ def _int_env(name: str, default: int, minimum: int = 0) -> int:
     return value
 
 
+# Read and validate a floating-point environment variable.
 def _float_env(
     name: str,
     default: float,

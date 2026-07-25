@@ -1,18 +1,15 @@
-"""PDF extraction and sentence-aware text chunking."""
 from __future__ import annotations
-
 import hashlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-
 from pypdf import PdfReader
-
 from src.config import ENABLE_OCR, PDF_DIR, TEXT_CHUNK_OVERLAP, TEXT_CHUNK_SIZE
 
 _BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+|\n{2,}")
 
 
+# Store extracted documents and ingestion diagnostics.
 @dataclass
 class IngestionReport:
     documents: list[dict] = field(default_factory=list)
@@ -21,11 +18,12 @@ class IngestionReport:
     errors: list[str] = field(default_factory=list)
 
 
+# Discover PDF files recursively under the input directory.
 def load_pdf_paths(pdf_dir: Path = PDF_DIR) -> list[Path]:
-    """Discover PDFs recursively so document folders can be preserved."""
     return sorted(path for path in pdf_dir.rglob("*.pdf") if path.is_file())
 
 
+# Calculate a stable SHA-256 fingerprint for a file.
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -34,6 +32,7 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+# Extract text from scanned PDF pages with OCR.
 def _ocr_pages(pdf_path: Path) -> dict[int, str]:
     try:
         import fitz
@@ -58,12 +57,12 @@ def _ocr_pages(pdf_path: Path) -> dict[int, str]:
     return results
 
 
+# Extract text while preserving one-based PDF page numbers.
 def extract_pdf_text(
     pdf_path: Path,
     *,
     enable_ocr: bool = ENABLE_OCR,
 ) -> list[tuple[int, str]]:
-    """Extract text from every PDF page, preserving one-based page numbers."""
     reader = PdfReader(pdf_path)
     if reader.is_encrypted:
         try:
@@ -85,6 +84,7 @@ def extract_pdf_text(
     return pages
 
 
+# Split a text unit that exceeds the configured chunk size.
 def _split_oversized_unit(unit: str, chunk_size: int) -> list[str]:
     words = unit.split()
     if not words:
@@ -106,12 +106,12 @@ def _split_oversized_unit(unit: str, chunk_size: int) -> list[str]:
     return parts
 
 
+# Build chunks around paragraph and sentence boundaries.
 def chunk_text(
     text: str,
     chunk_size: int = TEXT_CHUNK_SIZE,
     overlap: int = TEXT_CHUNK_OVERLAP,
 ) -> list[str]:
-    """Build chunks on paragraph/sentence boundaries with bounded overlap."""
     if chunk_size <= 0:
         raise ValueError("chunk_size must be positive")
     if overlap < 0 or overlap >= chunk_size:
@@ -144,6 +144,7 @@ def chunk_text(
     return chunks
 
 
+# Process PDFs and collect chunks, warnings, and errors.
 def build_document_chunks_with_report(
     pdf_dir: Path = PDF_DIR,
     chunk_size: int = TEXT_CHUNK_SIZE,
@@ -199,10 +200,10 @@ def build_document_chunks_with_report(
     return report
 
 
+# Return document chunks without the extended ingestion report.
 def build_document_chunks(
     pdf_dir: Path = PDF_DIR,
     chunk_size: int = TEXT_CHUNK_SIZE,
     overlap: int = TEXT_CHUNK_OVERLAP,
 ) -> list[dict]:
-    """Backward-compatible convenience wrapper."""
     return build_document_chunks_with_report(pdf_dir, chunk_size, overlap).documents

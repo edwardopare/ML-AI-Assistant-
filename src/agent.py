@@ -1,6 +1,4 @@
-"""Grounded answer generation, OpenRouter transport, and versioned caching."""
 from __future__ import annotations
-
 import hashlib
 import json
 import re
@@ -9,7 +7,6 @@ import time
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
-
 import requests
 from langchain_core.documents import Document
 
@@ -38,7 +35,6 @@ NO_EVIDENCE_ANSWER = (
 
 class OpenRouterError(RuntimeError):
     """A safe, user-facing OpenRouter failure."""
-
 
 class OpenRouterClient:
     def __init__(
@@ -250,7 +246,6 @@ class OpenRouterClient:
         if not isinstance(answer, str):
             raise OpenRouterError("OpenRouter returned an invalid non-streaming answer.")
         return self._validate_citations(answer, citation_map), citation_map
-
 
 class ResponseCache:
     def __init__(self, cache_dir: Path = CACHE_DIR):

@@ -1,11 +1,8 @@
-"""Hybrid dense/lexical retrieval with relevance filtering and MMR reranking."""
 from __future__ import annotations
-
 import math
 import re
 from collections import Counter
 from dataclasses import dataclass
-
 import numpy as np
 from langchain_core.documents import Document
 
@@ -83,7 +80,6 @@ def _cosine_similarity(left: np.ndarray, right: np.ndarray) -> float:
 
 
 class Retriever:
-    """Retrieve grounded evidence using dense search, BM25, and MMR."""
 
     def __init__(
         self,

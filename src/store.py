@@ -1,6 +1,4 @@
-"""ChromaDB persistence and index-manifest management."""
 from __future__ import annotations
-
 import hashlib
 import json
 import shutil
@@ -8,7 +6,6 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 import chromadb
 from chromadb.config import Settings
 from chromadb.errors import NotFoundError
@@ -26,7 +23,6 @@ from src.config import (
 
 class IndexCompatibilityError(RuntimeError):
     """Raised when the persisted index does not match current configuration."""
-
 
 def create_client(persist_directory: Path = CHROMA_DIR):
     """Create the single authoritative persistent Chroma client."""
