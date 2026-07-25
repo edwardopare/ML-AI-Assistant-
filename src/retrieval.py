@@ -27,6 +27,7 @@ from src.store import (
 _TOKEN_RE = re.compile(r"\b[\w'-]+\b", flags=re.UNICODE)
 
 
+# Represent one scored retrieval candidate.
 @dataclass
 class _Candidate:
     id: str
@@ -38,10 +39,12 @@ class _Candidate:
     combined_score: float = 0.0
 
 
+# Normalize text into lexical retrieval tokens.
 def _tokens(text: str) -> list[str]:
     return [token.lower() for token in _TOKEN_RE.findall(text)]
 
 
+# Calculate normalized BM25 scores for candidate documents.
 def _bm25_scores(query: str, documents: list[str]) -> list[float]:
     query_terms = _tokens(query)
     if not query_terms or not documents:
@@ -74,13 +77,15 @@ def _bm25_scores(query: str, documents: list[str]) -> list[float]:
     return [score / maximum if maximum else 0.0 for score in scores]
 
 
+# Calculate cosine similarity between two vectors.
 def _cosine_similarity(left: np.ndarray, right: np.ndarray) -> float:
     denominator = float(np.linalg.norm(left) * np.linalg.norm(right))
     return float(np.dot(left, right) / denominator) if denominator else 0.0
 
 
+# Retrieve evidence using dense search, BM25, and MMR.
 class Retriever:
-
+    # Initialize retrieval settings and open the indexed collection.
     def __init__(
         self,
         top_k: int = RETRIEVAL_TOP_K,
@@ -119,11 +124,13 @@ class Retriever:
             )
         self.collection = collection
 
+    # Close a ChromaDB client owned by this retriever.
     def close(self) -> None:
         if self.client is not None:
             self.client.close()
             self.client = None
 
+    # Return relevant and diverse evidence for a query.
     def retrieve(self, query: str, top_k: int | None = None) -> list[Document]:
         if not query.strip():
             return []

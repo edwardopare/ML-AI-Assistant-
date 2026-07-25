@@ -21,11 +21,12 @@ from src.config import (
 )
 
 
+# Signal that an index cannot be used with current settings.
 class IndexCompatibilityError(RuntimeError):
-    """Raised when the persisted index does not match current configuration."""
+    pass
 
+# Create the authoritative persistent ChromaDB client.
 def create_client(persist_directory: Path = CHROMA_DIR):
-    """Create the single authoritative persistent Chroma client."""
     persist_directory.mkdir(parents=True, exist_ok=True)
     return chromadb.PersistentClient(
         path=str(persist_directory.resolve()),
@@ -33,6 +34,7 @@ def create_client(persist_directory: Path = CHROMA_DIR):
     )
 
 
+# Load an existing collection or create it when requested.
 def get_collection(
     client,
     name: str = COLLECTION_NAME,
@@ -51,6 +53,7 @@ def get_collection(
         )
 
 
+# Write JSON through a temporary file and atomic replacement.
 def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
@@ -65,6 +68,7 @@ def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     temporary_path.replace(path)
 
 
+# Calculate a stable fingerprint from indexed documents.
 def corpus_fingerprint(documents: list[dict]) -> str:
     digest = hashlib.sha256()
     for document in sorted(documents, key=lambda item: item["id"]):
@@ -73,6 +77,7 @@ def corpus_fingerprint(documents: list[dict]) -> str:
     return digest.hexdigest()
 
 
+# Load the persisted index manifest when it contains valid JSON.
 def load_manifest(path: Path = INDEX_MANIFEST_PATH) -> dict[str, Any] | None:
     if not path.exists():
         return None
@@ -84,6 +89,7 @@ def load_manifest(path: Path = INDEX_MANIFEST_PATH) -> dict[str, Any] | None:
         return None
 
 
+# Verify that the index matches current embedding and chunk settings.
 def validate_manifest(
     manifest: dict[str, Any] | None,
     *,
@@ -113,6 +119,7 @@ def validate_manifest(
         )
 
 
+# Check whether a populated collection and manifest exist.
 def store_exists(
     persist_directory: Path = CHROMA_DIR,
     collection_name: str = COLLECTION_NAME,
@@ -132,6 +139,7 @@ def store_exists(
             client.close()
 
 
+# Replace the collection and save its compatibility manifest.
 def persist_documents(
     documents: list[dict],
     embeddings: list[list[float]],
@@ -140,7 +148,6 @@ def persist_documents(
     *,
     embedding_model: str = EMBEDDING_MODEL_NAME,
 ) -> dict[str, Any]:
-    """Replace the collection so removed or shortened documents cannot remain stale."""
     if not documents:
         raise ValueError("Cannot persist an empty document collection")
     if len(documents) != len(embeddings):
@@ -191,6 +198,7 @@ def persist_documents(
         client.close()
 
 
+# Safely remove the configured vector index directory.
 def reset_store(persist_directory: Path = CHROMA_DIR) -> bool:
     if not persist_directory.exists():
         return False

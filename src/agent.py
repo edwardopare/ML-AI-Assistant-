@@ -33,10 +33,13 @@ NO_EVIDENCE_ANSWER = (
 )
 
 
+# Represent a safe user-facing OpenRouter failure.
 class OpenRouterError(RuntimeError):
-    """A safe, user-facing OpenRouter failure."""
+    pass
 
+# Send grounded generation requests through OpenRouter.
 class OpenRouterClient:
+    # Initialize the OpenRouter client and HTTP session.
     def __init__(
         self,
         model_name: str | None = None,
@@ -54,9 +57,11 @@ class OpenRouterClient:
         self.max_retries = max_retries
         self.session = session or requests.Session()
 
+    # Report whether an API key is configured.
     def is_available(self) -> bool:
         return bool(self.api_key)
 
+    # Send an HTTP request with retry handling.
     def _request(self, messages: list[dict[str, str]], stream: bool):
         if not self.is_available():
             raise OpenRouterError(
@@ -107,6 +112,7 @@ class OpenRouterClient:
             raise OpenRouterError(f"OpenRouter returned HTTP {status_code}.")
         raise OpenRouterError("OpenRouter request failed unexpectedly.")
 
+    # Generate a complete answer or return a streaming iterator.
     def generate(
         self,
         messages: list[dict[str, str]],
@@ -126,6 +132,7 @@ class OpenRouterClient:
         finally:
             response.close()
 
+    # Parse and validate server-sent streaming events.
     def _stream_response(self, response) -> Generator[str, None, None]:
         received_content = False
         try:
@@ -154,6 +161,7 @@ class OpenRouterClient:
         if not received_content:
             raise OpenRouterError("OpenRouter returned an empty stream.")
 
+    # Assemble complete evidence chunks within the context budget.
     @staticmethod
     def _build_context(
         documents: list[Document],
@@ -184,6 +192,7 @@ class OpenRouterClient:
             }
         return "\n\n---\n\n".join(parts), citation_map
 
+    # Build separated system and user messages for grounded generation.
     @staticmethod
     def _messages(question: str, context: str) -> list[dict[str, str]]:
         return [
@@ -209,10 +218,12 @@ class OpenRouterClient:
             },
         ]
 
+    # Remove unknown citation identifiers from a generated answer.
     @staticmethod
     def _validate_citations(answer: str, citation_map: dict[str, dict]) -> str:
         valid_ids = set(citation_map)
 
+        # Keep valid citations and mark unsupported identifiers.
         def replace(match: re.Match[str]) -> str:
             citation_id = f"S{match.group(1)}"
             return match.group(0) if citation_id in valid_ids else "[invalid citation]"
@@ -228,6 +239,7 @@ class OpenRouterClient:
             answer += f"\n\nEvidence used: {evidence}"
         return answer
 
+    # Answer a question from retrieved documents and return citation metadata.
     def answer_question(
         self,
         question: str,
@@ -247,13 +259,16 @@ class OpenRouterClient:
             raise OpenRouterError("OpenRouter returned an invalid non-streaming answer.")
         return self._validate_citations(answer, citation_map), citation_map
 
+# Store versioned generated answers in an atomic JSON cache.
 class ResponseCache:
+    # Initialize the cache directory and load existing entries.
     def __init__(self, cache_dir: Path = CACHE_DIR):
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = self.cache_dir / "query_cache.json"
         self.cache = self._load_cache()
 
+    # Load compatible cache data or return an empty cache.
     def _load_cache(self) -> dict[str, Any]:
         if not self.cache_file.exists():
             return {"schema_version": CACHE_SCHEMA_VERSION, "entries": {}}
@@ -266,6 +281,7 @@ class ResponseCache:
         except (OSError, json.JSONDecodeError, AttributeError):
             return {"schema_version": CACHE_SCHEMA_VERSION, "entries": {}}
 
+    # Save cache data with atomic file replacement.
     def _save_cache(self) -> None:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(
@@ -279,6 +295,7 @@ class ResponseCache:
             temporary_path = Path(handle.name)
         temporary_path.replace(self.cache_file)
 
+    # Build a stable key from the question and runtime configuration.
     @staticmethod
     def make_key(question: str, configuration: dict[str, Any]) -> str:
         canonical = json.dumps(
@@ -291,20 +308,25 @@ class ResponseCache:
         )
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
+    # Return a copied cached result for a key.
     def get(self, key: str) -> dict | None:
         value = self.cache["entries"].get(key)
         return dict(value) if isinstance(value, dict) else None
 
+    # Store and persist one generated result.
     def set(self, key: str, result: dict) -> None:
         self.cache["entries"][key] = result
         self._save_cache()
 
+    # Remove every generated-answer cache entry.
     def clear(self) -> None:
         self.cache = {"schema_version": CACHE_SCHEMA_VERSION, "entries": {}}
         self._save_cache()
 
 
+# Coordinate retrieval, generation, citations, metrics, and caching.
 class RAGAgent:
+    # Initialize the RAG pipeline and optional injected components.
     def __init__(
         self,
         top_k: int = RETRIEVAL_TOP_K,
@@ -322,6 +344,7 @@ class RAGAgent:
         self.cache = cache if cache is not None else (ResponseCache() if use_cache else None)
         self.stream = stream
 
+    # Describe every setting that affects a cached answer.
     def _cache_configuration(self) -> dict[str, Any]:
         manifest = load_manifest() or {}
         return {
@@ -333,6 +356,7 @@ class RAGAgent:
             "max_tokens": OPENROUTER_MAX_TOKENS,
         }
 
+    # Retrieve evidence and generate a grounded answer.
     def answer(self, question: str) -> dict:
         start_time = time.perf_counter()
         cache_key = ResponseCache.make_key(question, self._cache_configuration())
