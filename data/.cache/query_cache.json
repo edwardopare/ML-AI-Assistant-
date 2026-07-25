@@ -21,5 +21,51 @@
       "generation_time_s": 31.25,
       "total_time_s": 31.42
     }
+  },
+  "what is machine learning": {
+    "query": "what is machine learning",
+    "answer": "Machine learning is about extracting knowledge from data and is a research field at the intersection of statistics, artificial intelligence, and computer science. It is also known as predictive analytics or statistical learning (Introduction to Machine Learning with Python, page 15).",
+    "sources": [
+      {
+        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+        "page": 15,
+        "chunk": 2,
+        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      },
+      {
+        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+        "page": 15,
+        "chunk": 1,
+        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      }
+    ],
+    "metrics": {
+      "retrieval_time_s": 0.37,
+      "generation_time_s": 3.45,
+      "total_time_s": 3.82
+    }
+  },
+  "what is feature engineering": {
+    "query": "what is feature engineering",
+    "answer": "Feature engineering involves the process of explicitly expanding the feature space and selecting appropriate features that enhance the effectiveness of machine learning models (Introduction to Machine Learning with Python, page 264).",
+    "sources": [
+      {
+        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+        "page": 264,
+        "chunk": 2,
+        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      },
+      {
+        "source": "Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf",
+        "page": 383,
+        "chunk": 3,
+        "path": "D:\\RAG AI\\data\\Introduction to Machine Learning with Python ( PDFDrive.com )-min.pdf"
+      }
+    ],
+    "metrics": {
+      "retrieval_time_s": 0.05,
+      "generation_time_s": 2.6,
+      "total_time_s": 2.65
+    }
   }
 }

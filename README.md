@@ -1,6 +1,6 @@
-# RAG AI - Local Retrieval-Augmented Generation
+# RAG AI - Retrieval-Augmented Generation
 
-A fully-local, privacy-focused Retrieval-Augmented Generation (RAG) system for PDF documents. No API keys. No quotas. No internet required.
+A RAG system for PDF documents. Retrieval and embeddings run locally; answer generation uses OpenRouter.
 
 ## Architecture
 
@@ -13,15 +13,14 @@ A fully-local, privacy-focused Retrieval-Augmented Generation (RAG) system for P
 **Query Processing:**
 - Questions are used directly to search ChromaDB (no query rewriting for speed)
 - Top-2 relevant document chunks are retrieved via cosine similarity
-- Local Ollama models synthesize answers from retrieved context
+- A configurable OpenRouter model synthesizes answers from retrieved context
 - Responses are cached for instant retrieval on repeat queries
 - Performance metrics tracked for visibility into latency
 
 ## Key Features
 
-- **100% Local & Private** - Runs entirely on your machine with Ollama
-- **No API Keys Required** - Zero cloud dependencies
-- **Auto Model Detection** - Automatically selects fastest available Ollama model
+- **Local Retrieval** - PDF processing, embeddings, and vector search stay on your machine
+- **OpenRouter Generation** - Use any compatible model available to your OpenRouter account
 - **Response Caching** - Identical queries answered instantly from cache
 - **Real-time Streaming** - Watch answers generate live with `--stream` flag
 - **Performance Metrics** - See retrieval/generation/total times
@@ -30,8 +29,7 @@ A fully-local, privacy-focused Retrieval-Augmented Generation (RAG) system for P
 ## Prerequisites
 
 - Python 3.9+
-- [Ollama](https://ollama.ai) installed and running (`ollama serve`)
-- At least one model installed in Ollama (phi3, llama3, mistral, etc.)
+- An OpenRouter API key
 
 ## Setup
 
@@ -47,11 +45,15 @@ A fully-local, privacy-focused Retrieval-Augmented Generation (RAG) system for P
 pip install -r requirements.txt
 ```
 
-3. Ensure Ollama is running:
+3. Copy the environment template and add your API key:
 
-```bash
-ollama serve
+```powershell
+Copy-Item .env.example .env
+# Edit .env and replace the placeholder with your rotated OpenRouter key.
 ```
+
+The default model is `openai/gpt-4o-mini`. Change `OPENROUTER_MODEL` in `.env`
+to another OpenRouter model identifier if desired.
 
 ## Usage
 
@@ -97,22 +99,6 @@ python main.py cache-clear
 python main.py reset
 ```
 
-## Supported Ollama Models
-
-Auto-detects and prefers the fastest available model:
-
-1. **phi3** (2.2 GB) - Fastest 
-2. **orca-mini** (3.3 GB) - Fast
-3. **neural-chat** (4.7 GB) - Balanced
-4. **llama3** (4.7 GB) - High quality
-5. **mistral** (4.4 GB) - Balanced
-
-Install models:
-```bash
-ollama pull phi3
-ollama pull llama3
-```
-
 ## Performance
 
 | Metric | Time |
@@ -120,18 +106,14 @@ ollama pull llama3
 | First Query | ~2-3 minutes |
 | Cached Query | <1 second |
 | Retrieval | ~1-2 seconds |
-| Generation | ~1-2 minutes |
+| Generation | Depends on the selected OpenRouter model |
 
 ## Troubleshooting
 
-**"Ollama is unavailable"** - Ensure Ollama is running:
-```bash
-ollama serve
-```
+**`OPENROUTER_API_KEY is not set`** - Create `.env` from `.env.example` and add
+your rotated key.
 
-**"Model not found"** - Pull the model:
-```bash
-ollama pull phi3
-```
+**OpenRouter 401 error** - Check that the key is current and has not been revoked.
 
-**Slow responses** - Try a faster model (phi3 is recommended for speed)
+**OpenRouter model error** - Set `OPENROUTER_MODEL` to a model identifier your
+account can access.

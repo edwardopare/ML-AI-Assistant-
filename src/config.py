@@ -17,6 +17,17 @@ CHROMA_DIR = ROOT_DIR / '.chromadb'
 # Embedding model configuration
 EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2').strip()
 
+# OpenRouter generation configuration
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '').strip()
+OPENROUTER_BASE_URL = os.getenv(
+	'OPENROUTER_BASE_URL',
+	'https://openrouter.ai/api/v1',
+).strip().rstrip('/')
+OPENROUTER_MODEL = os.getenv(
+	'OPENROUTER_MODEL',
+	'openai/gpt-4o-mini',
+).strip()
+
 # Legacy Gemini configuration (kept for backward compatibility)
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '').strip()
 _raw_endpoint = os.getenv('GEMINI_API_ENDPOINT', '')

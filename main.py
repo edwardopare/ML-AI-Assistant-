@@ -28,7 +28,7 @@ def ingest() -> None:
 def query(question: str, auto_ingest: bool = True, force_ingest: bool = False, stream: bool = False, use_cache: bool = True) -> None:
     """
     Answer a question about the knowledge base.
-    Retrieves relevant documents and generates a response using local LLM.
+    Retrieves relevant documents and generates a response using OpenRouter.
     """
     if not question.strip():
         print('Please provide a question.')
@@ -69,7 +69,7 @@ def reset() -> None:
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description='RAG AI local QA agent')
+    parser = argparse.ArgumentParser(description='RAG AI QA agent powered by OpenRouter')
     sub = parser.add_subparsers(dest='command', required=True)
 
     sub.add_parser('ingest', help='Ingest PDFs and build the vector store')

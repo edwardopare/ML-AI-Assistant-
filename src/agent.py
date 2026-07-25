@@ -1,5 +1,4 @@
 from __future__ import annotations
-import os
 import requests
 import json
 import time
@@ -7,68 +6,40 @@ from typing import List, Generator
 from pathlib import Path
 from langchain_core.documents import Document
 from .retrieval import Retriever
+from .config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 
 
-class OllamaClient:
+class OpenRouterClient:
     """
-    Client for interacting with local Ollama API.
-    Handles model inference, auto-detection, and streaming responses.
+    Client for OpenRouter's OpenAI-compatible chat completions API.
     """
 
-    def __init__(self, model_name: str | None = None, base_url: str = "http://localhost:11434"):
-        self.base_url = base_url
-        self.api_endpoint = f"{base_url}/api/generate"
-        self.client_available = self._check_availability()
-        self.model_name = model_name or self._auto_detect_model()
-
-    def _check_availability(self) -> bool:
-        """Check if Ollama server is running and accessible."""
-        try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=2)
-            return response.status_code == 200
-        except Exception:
-            return False
-
-    def _auto_detect_model(self) -> str:
-        """Auto-detect and select the fastest available Ollama model based on priority list."""
-        if not self.client_available:
-            return "mistral"  # fallback
-        
-        try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
-            if response.status_code == 200:
-                models = response.json().get("models", [])
-                if models:
-                    # Prefer smaller/faster models: phi3 > orca-mini > llama3 > mistral
-                    model_names = [m["name"].split(":")[0] for m in models]
-                    for preferred in ["phi3", "orca-mini", "neural-chat", "llama3", "mistral"]:
-                        if preferred in model_names:
-                            print(f"[Ollama] Auto-detected model: {preferred}")
-                            return preferred
-                    # Fallback to first available
-                    return model_names[0]
-        except Exception:
-            pass
-        
-        return "mistral"
+    def __init__(self, model_name: str | None = None):
+        self.api_endpoint = f"{OPENROUTER_BASE_URL}/chat/completions"
+        self.api_key = OPENROUTER_API_KEY
+        self.model_name = model_name or OPENROUTER_MODEL
 
     def is_available(self) -> bool:
-        """Check if Ollama client is available."""
-        return self.client_available
+        """Return whether an OpenRouter API key is configured."""
+        return bool(self.api_key)
 
     def generate(self, prompt: str, stream: bool = False) -> str | Generator[str, None, None]:
-        """Generate response from Ollama, optionally streaming chunks."""
+        """Generate a response through OpenRouter, optionally streaming chunks."""
         if not self.is_available():
             raise RuntimeError(
-                f"Ollama is unavailable at {self.base_url}. Make sure Ollama is running."
+                "OPENROUTER_API_KEY is not set. Add it to your environment or .env file."
             )
 
         try:
             response = requests.post(
                 self.api_endpoint,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
                 json={
                     "model": self.model_name,
-                    "prompt": prompt,
+                    "messages": [{"role": "user", "content": prompt}],
                     "stream": stream,
                 },
                 timeout=300,
@@ -79,21 +50,26 @@ class OllamaClient:
                 if stream:
                     return self._stream_response(response)
                 else:
-                    return response.json().get("response", "").strip()
+                    return response.json()["choices"][0]["message"]["content"].strip()
             else:
-                print(f"[Ollama Error] Status {response.status_code}: {response.text}", flush=True)
+                print(f"[OpenRouter Error] Status {response.status_code}: {response.text}", flush=True)
                 return ""
         except Exception as e:
-            print(f"[Ollama Error] {type(e).__name__}: {str(e)}", flush=True)
+            print(f"[OpenRouter Error] {type(e).__name__}: {str(e)}", flush=True)
             return ""
 
     def _stream_response(self, response) -> Generator[str, None, None]:
-        """Stream response line by line from Ollama."""
-        for line in response.iter_lines():
+        """Parse OpenRouter's server-sent event stream."""
+        for line in response.iter_lines(decode_unicode=True):
             if line:
+                if not line.startswith("data: "):
+                    continue
+                payload = line[6:]
+                if payload == "[DONE]":
+                    break
                 try:
-                    data = json.loads(line)
-                    yield data.get("response", "")
+                    data = json.loads(payload)
+                    yield data["choices"][0].get("delta", {}).get("content", "")
                 except json.JSONDecodeError:
                     continue
 
@@ -112,27 +88,19 @@ class OllamaClient:
         
         context = "\n\n".join(context_parts)
         
-        if self.is_available():
-            prompt = (
-                "You are a helpful assistant. Answer the question using ONLY the provided context. "
-                "Always cite the source file and page number. Be concise.\n\n"
-                f"Question: {question}\n\n"
-                f"Context:\n{context}\n\n"
-                "Answer:" 
-            )
-            
-            if stream:
-                return self.generate(prompt, stream=True)
-            else:
-                answer = self.generate(prompt, stream=False)
-                if not answer:
-                    return f"[No answer generated] Retrieved context:\n{context}"
-                return answer
-
-        return (
-            "[Ollama unavailable] Retrieved document chunks:\n\n"
-            f"Question: {question}\n\n{context}"
+        prompt = (
+            "You are a helpful assistant. Answer the question using ONLY the provided context. "
+            "Always cite the source file and page number. Be concise.\n\n"
+            f"Question: {question}\n\n"
+            f"Context:\n{context}\n\n"
+            "Answer:"
         )
+        if stream:
+            return self.generate(prompt, stream=True)
+        answer = self.generate(prompt, stream=False)
+        if not answer:
+            return f"[No answer generated] Retrieved context:\n{context}"
+        return answer
 
 
 class ResponseCache:
@@ -190,7 +158,7 @@ class RAGAgent:
 
     def __init__(self, top_k: int = 2, model_name: str | None = None, use_cache: bool = True, stream: bool = False) -> None:
         self.retriever = Retriever(top_k=top_k)
-        self.llm = OllamaClient(model_name=model_name)
+        self.llm = OpenRouterClient(model_name=model_name)
         self.cache = ResponseCache() if use_cache else None
         self.stream = stream
 
