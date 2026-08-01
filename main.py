@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 import argparse
 import sys
 from collections.abc import Sequence
-
 from src.agent import OpenRouterError, RAGAgent, ResponseCache
 from src.config import CHROMA_DIR, RETRIEVAL_TOP_K
 from src.embeddings import LocalEmbedder
