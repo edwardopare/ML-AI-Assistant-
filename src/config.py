@@ -9,6 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 PDF_DIR = ROOT_DIR / "data"
 CHROMA_DIR = ROOT_DIR / ".chromadb"
 CACHE_DIR = ROOT_DIR / "data" / ".cache"
+CONVERSATION_DB_PATH = CACHE_DIR / "conversations.sqlite3"
 INDEX_MANIFEST_PATH = CHROMA_DIR / "index_manifest.json"
 COLLECTION_NAME = "rag_documents"
 INDEX_SCHEMA_VERSION = 2
@@ -101,3 +102,8 @@ RETRIEVAL_MMR_LAMBDA = _float_env(
     maximum=1.0,
 )
 MAX_CONTEXT_CHARS = _int_env("MAX_CONTEXT_CHARS", 12000, 500)
+CONVERSATION_HISTORY_MESSAGES = _int_env(
+    "CONVERSATION_HISTORY_MESSAGES",
+    10,
+    0,
+)

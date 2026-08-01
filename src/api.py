@@ -14,6 +14,7 @@ from .channels import (
 from .store import IndexCompatibilityError, store_exists
 
 
+# Validate messages sent by web clients.
 class ChatRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -22,6 +23,7 @@ class ChatRequest(BaseModel):
     user_id: str | None = Field(default=None, max_length=256)
 
 
+# Describe one evidence citation in an API response.
 class Citation(BaseModel):
     source: str | None = None
     relative_path: str | None = None
@@ -30,6 +32,7 @@ class Citation(BaseModel):
     retrieval_score: float | None = None
 
 
+# Describe RAG timing and cache performance.
 class Metrics(BaseModel):
     retrieval_time_s: float | None = None
     generation_time_s: float | None = None
@@ -37,21 +40,26 @@ class Metrics(BaseModel):
     cache_hit: bool
 
 
+# Define the structured response returned to web clients.
 class ChatResponse(BaseModel):
     channel: Literal["web"]
     conversation_id: str | None = None
     user_id: str | None = None
+    history_messages_used: int
     query: str
     answer: str
     citations: dict[str, Citation]
     metrics: Metrics
 
 
+# Retrieve the application-scoped channel service.
 def get_channel_service(request: Request) -> ChannelService:
     return request.app.state.channel_service
 
 
+# Build and configure the FastAPI application.
 def create_app(channel_service: ChannelService | None = None) -> FastAPI:
+    # Initialize shared application services for the server lifetime.
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.channel_service = channel_service or ChannelService()
@@ -64,10 +72,12 @@ def create_app(channel_service: ChannelService | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Report whether the API process is running.
     @app.get("/health", tags=["operations"])
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    # Report whether the document index is ready for queries.
     @app.get("/ready", tags=["operations"])
     async def ready() -> dict[str, str]:
         if not store_exists():
@@ -77,6 +87,7 @@ def create_app(channel_service: ChannelService | None = None) -> FastAPI:
             )
         return {"status": "ready"}
 
+    # Answer a message from a web application.
     @app.post(
         "/api/v1/channels/web/messages",
         response_model=ChatResponse,
@@ -96,6 +107,7 @@ def create_app(channel_service: ChannelService | None = None) -> FastAPI:
             ),
         )
 
+    # Answer or ignore an incoming Teams activity.
     @app.post("/api/v1/channels/teams/messages", tags=["channels"])
     async def teams_message(
         activity: dict[str, Any],
@@ -124,6 +136,7 @@ def create_app(channel_service: ChannelService | None = None) -> FastAPI:
     return app
 
 
+# Run synchronous retrieval and generation outside the event loop.
 async def _answer(
     service: ChannelService,
     request: ChannelRequest,

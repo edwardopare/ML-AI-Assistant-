@@ -6,6 +6,7 @@ about PDF documents. It can be used through:
 - A command-line interface
 - A JSON API for a web application
 - A Microsoft Teams-compatible channel adapter
+- Durable per-conversation chat memory backed by SQLite
 
 PDF parsing, embeddings, indexing, and retrieval run locally. For questions
 with relevant evidence, only the question and selected document chunks are sent
@@ -37,6 +38,11 @@ to OpenRouter for answer generation.
 
 Both API channels use the same RAG pipeline. Channel-specific code only
 translates incoming messages and formats outgoing responses.
+
+When `conversation_id` is supplied, recent messages are loaded before
+retrieval and generation, and the new user/assistant exchange is stored after a
+successful answer. History is isolated by channel, conversation ID, and user
+ID. Requests without a conversation ID remain stateless.
 
 ## How It Works
 
@@ -186,9 +192,9 @@ Request:
 }
 ```
 
-Only `message` is required. `conversation_id` and `user_id` are returned for
-client-side correlation; the current RAG answers each request independently
-and does not yet maintain conversation history.
+Only `message` is required. Supply a stable `conversation_id` and `user_id` to
+continue a stored conversation. Omitting `conversation_id` makes the request
+stateless.
 
 Example response:
 
@@ -197,6 +203,7 @@ Example response:
   "channel": "web",
   "conversation_id": "web-1",
   "user_id": "user-1",
+  "history_messages_used": 0,
   "query": "What are the main conclusions?",
   "answer": "The grounded answer includes evidence [S1].",
   "citations": {
@@ -310,6 +317,7 @@ source PDFs.
 | `OPENROUTER_MAX_TOKENS` | `800` | Maximum generated tokens |
 | `OPENROUTER_TEMPERATURE` | `0.1` | Generation randomness |
 | `MAX_CONTEXT_CHARS` | `12000` | Evidence budget sent to the model |
+| `CONVERSATION_HISTORY_MESSAGES` | `10` | Recent messages loaded for a conversation |
 
 ### Ingestion and retrieval
 
@@ -375,6 +383,7 @@ RAG AI/
 |   |-- agent.py            RAG orchestration, OpenRouter, citations, cache
 |   |-- api.py              FastAPI application and channel endpoints
 |   |-- channels.py         Web/Teams-neutral channel service and Teams adapter
+|   |-- conversations.py    SQLite conversation history
 |   |-- config.py           Validated environment configuration
 |   |-- embeddings.py       Local normalized embeddings
 |   |-- ingest.py           PDF extraction, OCR, hashing, and chunking
@@ -391,6 +400,7 @@ Generated state:
 
 - `.chromadb/` contains the vector index and manifest.
 - `data/.cache/query_cache.json` contains generated answers.
+- `data/.cache/conversations.sqlite3` contains channel conversation history.
 
 Both paths are excluded from Git.
 
@@ -472,7 +482,8 @@ reuse the locally cached model.
 
 ## Current Limitations
 
-- The API does not maintain multi-turn conversation history.
+- Conversation memory is local SQLite storage and is not yet equipped with
+  retention jobs or user-facing deletion controls.
 - The Teams adapter does not implement bot registration, JWT validation, or
   outbound Bot Framework transport.
 - BM25 scans stored chunk text and is intended for small or medium collections.

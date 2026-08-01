@@ -5,7 +5,7 @@ from src.channels import ChannelService
 
 
 class FakeAgent:
-    def answer(self, question):
+    def answer(self, question, history=None):
         return {
             "query": question,
             "answer": "A grounded answer [S1].",
@@ -29,7 +29,17 @@ class FakeAgent:
 
 
 def client():
-    return TestClient(create_app(ChannelService(FakeAgent())))
+    from tempfile import TemporaryDirectory
+
+    from src.conversations import ConversationStore
+
+    temporary_directory = TemporaryDirectory()
+    store = ConversationStore(
+        __import__("pathlib").Path(temporary_directory.name) / "conversations.sqlite3"
+    )
+    api = TestClient(create_app(ChannelService(FakeAgent(), store)))
+    api._conversation_test_directory = temporary_directory
+    return api
 
 
 def test_web_channel_returns_typed_rag_response():
