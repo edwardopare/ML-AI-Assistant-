@@ -1,3 +1,10 @@
+"""Tests for the FastAPI application layer.
+
+Auth is disabled because API_KEY defaults to empty in the test environment.
+The Teams HMAC check is skipped because TEAMS_WEBHOOK_SECRET defaults to empty.
+"""
+import json
+
 from fastapi.testclient import TestClient
 
 from src.api import create_app
@@ -61,17 +68,19 @@ def test_web_channel_returns_typed_rag_response():
 
 
 def test_teams_channel_removes_bot_mention_and_builds_reply_activity():
+    activity = {
+        "type": "message",
+        "id": "activity-1",
+        "text": "<at>RAG bot</at> What is covered?",
+        "conversation": {"id": "teams-1"},
+        "from": {"id": "user-1", "name": "User"},
+        "recipient": {"id": "bot-1", "name": "RAG bot"},
+    }
     with client() as api:
         response = api.post(
             "/api/v1/channels/teams/messages",
-            json={
-                "type": "message",
-                "id": "activity-1",
-                "text": "<at>RAG bot</at> What is covered?",
-                "conversation": {"id": "teams-1"},
-                "from": {"id": "user-1", "name": "User"},
-                "recipient": {"id": "bot-1", "name": "RAG bot"},
-            },
+            content=json.dumps(activity).encode(),
+            headers={"Content-Type": "application/json"},
         )
 
     assert response.status_code == 200
@@ -86,8 +95,24 @@ def test_teams_ignores_non_message_activity():
     with client() as api:
         response = api.post(
             "/api/v1/channels/teams/messages",
-            json={"type": "conversationUpdate"},
+            content=json.dumps({"type": "conversationUpdate"}).encode(),
+            headers={"Content-Type": "application/json"},
         )
 
     assert response.status_code == 200
     assert response.json()["status"] == "ignored"
+
+
+def test_health_endpoint_requires_no_auth():
+    with client() as api:
+        response = api.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
+def test_root_redirects_to_docs():
+    with client() as api:
+        response = api.get("/", follow_redirects=False)
+    assert response.status_code in (301, 302, 307, 308)
+    assert "/docs" in response.headers["location"]
+

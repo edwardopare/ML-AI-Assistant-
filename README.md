@@ -298,10 +298,11 @@ Maintenance commands:
 ```bash
 python main.py cache-clear
 python main.py reset
+python main.py cleanup-conversations --days 7
 ```
 
 `reset` deletes only the configured `.chromadb/` index. It does not delete
-source PDFs.
+source PDFs. `cleanup-conversations` purges chat history older than the specified retention window.
 
 ## Configuration
 
@@ -335,6 +336,20 @@ source PDFs.
 
 Changing the embedding model or chunk settings makes an existing index
 incompatible. Re-run ingestion after changing those values.
+
+### Security, network, and retention
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `APP_ENV` | `dev` | Profile (`dev` disables auth & uses text logs, `prod` enforces auth & JSON logs) |
+| `API_KEY` | None | Static bearer token for the web channel API (disabled when empty in dev) |
+| `TEAMS_WEBHOOK_SECRET` | None | Secret for Teams HMAC-SHA256 verification (skipped when empty in dev) |
+| `CORS_ORIGINS` | None | Comma-separated allowed CORS origins (e.g. `http://localhost:3000,http://localhost:8000`) |
+| `API_ALLOWED_HOSTS` | None | Comma-separated allowed Host headers (empty allows any host) |
+| `MAX_REQUEST_BODY_BYTES` | `65536` | Inbound request body limit in bytes (default 64 KB) |
+| `RATE_LIMIT_PER_MINUTE` | `30` | Rate limit per IP address for channel endpoints |
+| `CONVERSATION_MAX_AGE_DAYS` | `30` | Retention window in days for conversation cleanup |
+| `METRICS_TOKEN` | None | Optional bearer token protecting the `/metrics` endpoint |
 
 ## Optional OCR
 
@@ -383,11 +398,15 @@ RAG AI/
 |   |-- agent.py            RAG orchestration, OpenRouter, citations, cache
 |   |-- api.py              FastAPI application and channel endpoints
 |   |-- channels.py         Web/Teams-neutral channel service and Teams adapter
-|   |-- conversations.py    SQLite conversation history
 |   |-- config.py           Validated environment configuration
+|   |-- conversations.py    SQLite conversation history
 |   |-- embeddings.py       Local normalized embeddings
 |   |-- ingest.py           PDF extraction, OCR, hashing, and chunking
+|   |-- logging_config.py   Structured JSON and dev console logging
+|   |-- memory_cleanup.py   Retention purges for old conversation records
 |   |-- retrieval.py        Dense/BM25 retrieval and MMR reranking
+|   |-- security.py         Auth, Teams HMAC, and request body size middleware
+|   |-- services/           Modular service layer for pipeline components
 |   `-- store.py            ChromaDB lifecycle and index manifest
 |-- tests/                  Offline unit and integration tests
 |-- main.py                 CLI entry point
@@ -482,8 +501,9 @@ reuse the locally cached model.
 
 ## Current Limitations
 
-- Conversation memory is local SQLite storage and is not yet equipped with
-  retention jobs or user-facing deletion controls.
+- Conversation memory uses SQLite storage with automatic background cleanup via
+  APScheduler (daily) and the CLI `cleanup-conversations` command; individual
+  per-user deletion controls are not yet exposed.
 - The Teams adapter does not implement bot registration, JWT validation, or
   outbound Bot Framework transport.
 - BM25 scans stored chunk text and is intended for small or medium collections.

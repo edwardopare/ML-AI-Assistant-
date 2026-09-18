@@ -12,7 +12,10 @@ class LocalEmbedder:
     # Return the vector dimension reported by the embedding model.
     @property
     def dimension(self) -> int:
-        dimension = self.model.get_sentence_embedding_dimension()
+        if hasattr(self.model, "get_embedding_dimension"):
+            dimension = self.model.get_embedding_dimension()
+        else:
+            dimension = self.model.get_sentence_embedding_dimension()
         if dimension is None:
             raise RuntimeError("The embedding model did not report its vector dimension")
         return int(dimension)

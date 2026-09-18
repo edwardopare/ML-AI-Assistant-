@@ -107,3 +107,48 @@ CONVERSATION_HISTORY_MESSAGES = _int_env(
     10,
     0,
 )
+
+# ---------------------------------------------------------------------------
+# Security & deployment configuration
+# ---------------------------------------------------------------------------
+
+# Deployment profile: "dev" disables auth and uses human-readable logs.
+# "prod" requires API_KEY and emits JSON-structured logs.
+APP_ENV: str = os.getenv("APP_ENV", "dev").strip().lower()
+
+# Static bearer token guarding the web channel endpoint.
+# Leave empty in dev to disable authentication entirely.
+API_KEY: str = os.getenv("API_KEY", "").strip()
+
+# Secret for verifying Microsoft Teams outgoing-webhook HMAC-SHA256 signatures.
+# Leave empty to skip Teams signature verification (development only).
+TEAMS_WEBHOOK_SECRET: str = os.getenv("TEAMS_WEBHOOK_SECRET", "").strip()
+
+# Comma-separated list of origins allowed by CORS middleware.
+# Example: "https://myapp.example.com,https://localhost:3000"
+CORS_ORIGINS: list[str] = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+# Comma-separated list of Host header values that are accepted.
+# Leave empty to allow any host (acceptable for local dev).
+API_ALLOWED_HOSTS: list[str] = [
+    host.strip()
+    for host in os.getenv("API_ALLOWED_HOSTS", "").split(",")
+    if host.strip()
+]
+
+# Hard cap on inbound HTTP request body size in bytes (default 64 KB).
+MAX_REQUEST_BODY_BYTES: int = _int_env("MAX_REQUEST_BODY_BYTES", 65_536, 1024)
+
+# Maximum requests per minute per IP address for channel endpoints.
+RATE_LIMIT_PER_MINUTE: int = _int_env("RATE_LIMIT_PER_MINUTE", 30, 1)
+
+# Maximum age (in days) of conversation rows before the cleanup job deletes them.
+CONVERSATION_MAX_AGE_DAYS: int = _int_env("CONVERSATION_MAX_AGE_DAYS", 30, 1)
+
+# Optional separate metrics bearer token.  When set, /metrics requires it.
+METRICS_TOKEN: str = os.getenv("METRICS_TOKEN", "").strip()
+

@@ -7,10 +7,37 @@ wheels/
 *.egg-info
 
 # Virtual environments
-env
+env/
+.venv/
+
+# Environment / secrets — never commit real credentials
 .env
 .env.*
-.env.example
-.chromadb
+!.env.example
+!.env.dev
+!.env.prod.example
+
+# Runtime data stores (rebuilt by ingestion)
+.chromadb/
 data/.cache/
+
+# Document source data — keep all content out of version control
+data/*.pdf
+data/*.PDF
+data/**/*.pdf
+data/**/*.PDF
+data/*.docx
+data/**/*.docx
+data/*.txt
+data/**/*.txt
+data/*.csv
+data/**/*.csv
+data/*.xlsx
+data/**/*.xlsx
+
+# Test and IDE caches
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/

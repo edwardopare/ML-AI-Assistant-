@@ -1,6 +1,8 @@
 from __future__ import annotations
 import hashlib
 import json
+import logging
+import random
 import re
 import tempfile
 import time
@@ -24,7 +26,10 @@ from .config import (
     RETRIEVAL_TOP_K,
 )
 from .retrieval import Retriever
+from .security import redact_messages
 from .store import load_manifest
+
+logger = logging.getLogger(__name__)
 
 _CITATION_RE = re.compile(r"\[S(\d+)\]")
 CACHE_SCHEMA_VERSION = 2
@@ -68,7 +73,7 @@ class OpenRouterClient:
                 "OPENROUTER_API_KEY is not set. Add it to your environment or .env file."
             )
 
-        payload = {
+        payload: dict[str, Any] = {
             "model": self.model_name,
             "messages": messages,
             "stream": stream,
@@ -80,7 +85,18 @@ class OpenRouterClient:
             "Content-Type": "application/json",
         }
 
+        budget_start = time.monotonic()
+        budget_seconds = float(self.timeout_seconds) * (self.max_retries + 1)
+
+        # Apply pre-send redaction so credentials in context never reach the wire.
+        payload["messages"] = redact_messages(payload["messages"])
+
         for attempt in range(self.max_retries + 1):
+            elapsed = time.monotonic() - budget_start
+            if elapsed >= budget_seconds:
+                raise OpenRouterError(
+                    f"OpenRouter cumulative timeout exceeded after {elapsed:.1f}s."
+                )
             try:
                 response = self.session.post(
                     self.api_endpoint,
@@ -94,7 +110,12 @@ class OpenRouterClient:
                     raise OpenRouterError(
                         f"OpenRouter request failed after {attempt + 1} attempts: {exc}"
                     ) from exc
-                time.sleep(min(2**attempt, 4))
+                wait = min(2**attempt, 8) + random.uniform(0, 0.5 * 2**attempt)
+                logger.warning(
+                    "OpenRouter request failed, retrying",
+                    extra={"attempt": attempt + 1, "wait_s": round(wait, 2), "error": str(exc)},
+                )
+                time.sleep(wait)
                 continue
 
             if response.status_code == 200:
@@ -103,7 +124,12 @@ class OpenRouterClient:
             status_code = response.status_code
             response.close()
             if retryable and attempt < self.max_retries:
-                time.sleep(min(2**attempt, 4))
+                wait = min(2**attempt, 8) + random.uniform(0, 0.5 * 2**attempt)
+                logger.warning(
+                    "OpenRouter returned retryable status",
+                    extra={"attempt": attempt + 1, "status": status_code, "wait_s": round(wait, 2)},
+                )
+                time.sleep(wait)
                 continue
             if status_code in {401, 403}:
                 raise OpenRouterError(
@@ -411,19 +437,30 @@ class RAGAgent:
                 retriever.close()
         retrieval_time = time.perf_counter() - retrieval_start
 
+        if not documents:
+            logger.warning(
+                "RAG retrieval returned no documents",
+                extra={"model": self.llm.model_name, "top_k": self.top_k},
+            )
+
         generation_start = time.perf_counter()
-        generated, citation_map = self.llm.answer_question(
-            question,
-            documents,
-            stream=self.stream,
-            history=history,
-        )
+        try:
+            generated, citation_map = self.llm.answer_question(
+                question,
+                documents,
+                stream=self.stream,
+                history=history,
+            )
+        except OpenRouterError as exc:
+            logger.error("OpenRouter generation failed", extra={"error": str(exc)})
+            raise
+
         if self.stream and not isinstance(generated, str):
             chunks: list[str] = []
             for chunk in generated:
-                print(chunk, end="", flush=True)
+                print(chunk, end="", flush=True)  # noqa: T201 — intentional CLI streaming
                 chunks.append(chunk)
-            print(flush=True)
+            print(flush=True)  # noqa: T201
             answer = self.llm._validate_citations("".join(chunks), citation_map)
         else:
             answer = str(generated)
@@ -441,6 +478,17 @@ class RAGAgent:
                 "cache_hit": False,
             },
         }
+        logger.info(
+            "RAG answer produced",
+            extra={
+                "model": self.llm.model_name,
+                "retrieval_time_s": result["metrics"]["retrieval_time_s"],
+                "generation_time_s": result["metrics"]["generation_time_s"],
+                "total_time_s": result["metrics"]["total_time_s"],
+                "doc_count": len(documents),
+                "cache_hit": False,
+            },
+        )
         if self.cache:
             self.cache.set(cache_key, result)
         return result

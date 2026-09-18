@@ -1,0 +1,59 @@
+﻿name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+      - name: Install dev dependencies
+        run: uv sync --extra dev
+      - name: Ruff check
+        run: uv run ruff check src/ tests/ main.py
+      - name: Ruff format check
+        run: uv run ruff format --check src/ tests/ main.py
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+      - name: Install dependencies
+        run: uv sync --extra dev
+      - name: Run tests with coverage
+        run: uv run pytest -q --tb=short --cov=src --cov-report=term-missing
+        env:
+          APP_ENV: dev
+          OPENROUTER_API_KEY: test-key
+
+  security:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+      - name: Install dependencies
+        run: uv sync --extra dev
+      - name: pip-audit (CVE scan)
+        run: uv run pip-audit --requirement <(uv export --no-dev) --strict
+      - name: detect-secrets baseline scan
+        uses: Yelp/detect-secrets-action@v2
+        with:
+          args: >-
+            --baseline .secrets.baseline
+            --exclude-files '\.env\..*'
+            --exclude-files 'uv\.lock'

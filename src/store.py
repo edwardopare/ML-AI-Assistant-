@@ -10,7 +10,7 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.errors import NotFoundError
 
-from src.config import (
+from .config import (
     CHROMA_DIR,
     COLLECTION_NAME,
     EMBEDDING_MODEL_NAME,
@@ -32,6 +32,16 @@ def create_client(persist_directory: Path = CHROMA_DIR):
         path=str(persist_directory.resolve()),
         settings=Settings(anonymized_telemetry=False),
     )
+
+
+# Safely close client connection if supported.
+def close_client(client: Any) -> None:
+    close = getattr(client, "close", None)
+    if callable(close):
+        close()
+
+
+_close_client = close_client
 
 
 # Load an existing collection or create it when requested.
@@ -135,8 +145,7 @@ def store_exists(
     except Exception:
         return False
     finally:
-        if client is not None:
-            client.close()
+        _close_client(client)
 
 
 # Replace the collection and save its compatibility manifest.
@@ -195,7 +204,7 @@ def persist_documents(
         _atomic_write_json(manifest_path, manifest)
         return manifest
     finally:
-        client.close()
+        _close_client(client)
 
 
 # Safely remove the configured vector index directory.

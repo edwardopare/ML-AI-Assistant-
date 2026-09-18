@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 from langchain_core.documents import Document
 
-from src.config import (
+from .config import (
     COLLECTION_NAME,
     EMBEDDING_MODEL_NAME,
     RETRIEVAL_CANDIDATE_K,
@@ -15,9 +15,10 @@ from src.config import (
     RETRIEVAL_MMR_LAMBDA,
     RETRIEVAL_TOP_K,
 )
-from src.embeddings import LocalEmbedder
-from src.store import (
+from .embeddings import LocalEmbedder
+from .store import (
     IndexCompatibilityError,
+    close_client,
     create_client,
     get_collection,
     load_manifest,
@@ -127,7 +128,7 @@ class Retriever:
     # Close a ChromaDB client owned by this retriever.
     def close(self) -> None:
         if self.client is not None:
-            self.client.close()
+            close_client(self.client)
             self.client = None
 
     # Return relevant and diverse evidence for a query.
@@ -168,32 +169,67 @@ class Retriever:
                 dense_score=max(0.0, min(1.0, 1.0 - float(distance) / 2.0)),
             )
 
-        all_records = self.collection.get(
-            include=["documents", "metadatas", "embeddings"],
+        # Phase 2: BM25 lexical scoring over ids + documents only (no embeddings fetched yet).
+        # This keeps memory cost O(corpus text) rather than O(corpus * embedding_dim).
+        all_records_light = self.collection.get(
+            include=["documents", "metadatas"],
         )
-        all_ids = all_records.get("ids", [])
-        all_documents = all_records.get("documents") or []
-        all_metadatas = all_records.get("metadatas") or []
-        all_embeddings = all_records.get("embeddings")
-        if all_embeddings is None:
-            all_embeddings = []
+        all_ids = all_records_light.get("ids") or []
+        all_docs_raw = all_records_light.get("documents")
+        all_documents = all_docs_raw if all_docs_raw is not None else []
+        all_metas_raw = all_records_light.get("metadatas")
+        all_metadatas = all_metas_raw if all_metas_raw is not None else []
+
         lexical_scores = _bm25_scores(query, all_documents)
-        lexical_order = np.argsort(-np.asarray(lexical_scores))[: self.candidate_k]
-        for index in lexical_order:
-            index = int(index)
-            if lexical_scores[index] <= 0:
-                continue
-            identifier = all_ids[index]
-            candidate = candidates.get(identifier)
-            if candidate is None:
-                candidate = _Candidate(
+        # Find indices of the top-candidate_k documents by lexical score.
+        lexical_order = [
+            int(i)
+            for i in sorted(
+                range(len(lexical_scores)),
+                key=lambda idx: -lexical_scores[idx],
+            )[: self.candidate_k]
+            if lexical_scores[int(i)] > 0
+        ]
+
+        # Collect the lexical candidates that are NOT already in the dense set.
+        new_ids_needed = [
+            all_ids[idx]
+            for idx in lexical_order
+            if all_ids[idx] not in candidates
+        ]
+
+        # Targeted embedding fetch for only the new lexical-only candidates.
+        if new_ids_needed:
+            targeted = self.collection.get(
+                ids=new_ids_needed,
+                include=["documents", "metadatas", "embeddings"],
+            )
+            t_ids = targeted.get("ids") or []
+            t_docs_raw = targeted.get("documents")
+            t_docs = t_docs_raw if t_docs_raw is not None else []
+            t_metas_raw = targeted.get("metadatas")
+            t_metas = t_metas_raw if t_metas_raw is not None else []
+            t_embs_raw = targeted.get("embeddings")
+            t_embs = t_embs_raw if t_embs_raw is not None else []
+            for identifier, text, metadata, embedding in zip(
+                t_ids, t_docs, t_metas, t_embs
+            ):
+                candidates[identifier] = _Candidate(
                     id=identifier,
-                    text=all_documents[index],
-                    metadata=all_metadatas[index] or {},
-                    embedding=np.asarray(all_embeddings[index], dtype=np.float32),
+                    text=text,
+                    metadata=metadata or {},
+                    embedding=np.asarray(embedding, dtype=np.float32),
                 )
-                candidates[identifier] = candidate
-            candidate.lexical_score = lexical_scores[index]
+
+        # Apply lexical scores to all candidates in the lexical top-k.
+        for idx in lexical_order:
+            identifier = all_ids[idx]
+            if identifier in candidates:
+                candidates[identifier].lexical_score = lexical_scores[idx]
+                # Supplement metadata if we fetched it via the light query.
+                if not candidates[identifier].metadata and len(all_metadatas) > 0:
+                    candidates[identifier].metadata = all_metadatas[idx] or {}
+
 
         for candidate in candidates.values():
             candidate.combined_score = (

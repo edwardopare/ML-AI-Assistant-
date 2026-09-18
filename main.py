@@ -3,9 +3,10 @@ import argparse
 import sys
 from collections.abc import Sequence
 from src.agent import OpenRouterError, RAGAgent, ResponseCache
-from src.config import CHROMA_DIR, RETRIEVAL_TOP_K
+from src.config import CHROMA_DIR, CONVERSATION_MAX_AGE_DAYS, RETRIEVAL_TOP_K
 from src.embeddings import LocalEmbedder
 from src.ingest import build_document_chunks_with_report
+from src.memory_cleanup import cleanup_old_conversations
 from src.store import (
     IndexCompatibilityError,
     persist_documents,
@@ -143,6 +144,17 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     subparsers.add_parser("reset", help="Delete the vector index")
     subparsers.add_parser("cache-clear", help="Clear generated-answer cache")
+
+    cleanup_parser = subparsers.add_parser(
+        "cleanup-conversations",
+        help="Delete conversation history older than --days days",
+    )
+    cleanup_parser.add_argument(
+        "--days",
+        type=int,
+        default=CONVERSATION_MAX_AGE_DAYS,
+        help=f"Retention window in days (default: {CONVERSATION_MAX_AGE_DAYS})",
+    )
     return parser.parse_args(argv)
 
 
@@ -173,6 +185,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "cache-clear":
         ResponseCache().clear()
         print("Response cache cleared.")
+        return 0
+    if args.command == "cleanup-conversations":
+        deleted = cleanup_old_conversations(max_age_days=args.days)
+        print(f"Deleted {deleted} conversation row(s) older than {args.days} day(s).")
         return 0
     return 2
 

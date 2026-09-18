@@ -1,0 +1,2 @@
+search_path = ["."]
+ignore-missing-imports = ["fitz", "fitz.*", "pytesseract", "pytesseract.*", "PIL", "PIL.*"]

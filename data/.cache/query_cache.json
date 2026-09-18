@@ -720,6 +720,96 @@
         "total_time_s": 13.018,
         "cache_hit": false
       }
+    },
+    "9dc006497b1930e04bfdaf873521a04e481472fe82ac5a22c6bd766317cd147a": {
+      "query": "What are the key requirements for businesses under Act 992?",
+      "answer": "The key requirements for businesses under Act 992 include:\n\n1. **Updating Company Details**: All companies registered before December 2011 must update their details to conform with the Companies Act, 2019 (Act 992) and migrate into the E-Registrar Database [S4].\n\n2. **Mandatory Change of Name**: Existing companies are required to change their names and adopt a Constitution by Special Resolution in accordance with Act 992. They must deliver a Special Resolution to the Registrar indicating whether they will present a Registered Constitution or adopt a Standard Constitution as outlined in the Act [S4].\n\n3. **Adoption of a Constitution**: Companies must adopt a Constitution that complies with the requirements of Act 992, which may involve either a Registered Constitution or a Standard Constitution [S4].\n\nThese requirements aim to enhance corporate governance and promote ease of doing business in Ghana.",
+      "citations": {
+        "S1": {
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "page": 2,
+          "chunk": 1,
+          "retrieval_score": 0.8716
+        },
+        "S2": {
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "page": 1,
+          "chunk": 1,
+          "retrieval_score": 0.8212
+        },
+        "S3": {
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "page": 6,
+          "chunk": 1,
+          "retrieval_score": 0.7821
+        },
+        "S4": {
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "page": 43,
+          "chunk": 1,
+          "retrieval_score": 0.8193
+        }
+      },
+      "sources": [
+        {
+          "page": 2,
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "chunk_sha256": "72e055e542c3a141da917a83cd59d20fec31f7a9113adf6147e86320e1d11118",
+          "chunk": 1,
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "file_sha256": "2d983e61ad246a3ce8ca10c0e8d8d075b08fa4c7c6d43bb7bea3639b3028bf75",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.8716,
+          "dense_score": 0.8165,
+          "lexical_score": 1.0
+        },
+        {
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "chunk": 1,
+          "file_sha256": "2d983e61ad246a3ce8ca10c0e8d8d075b08fa4c7c6d43bb7bea3639b3028bf75",
+          "chunk_sha256": "5c1331a343b6dd4075ffedf3638d773774ab5bdfb35b58dac9c4ca272d02c6de",
+          "page": 1,
+          "retrieval_rank": 2,
+          "retrieval_score": 0.8212,
+          "dense_score": 0.7578,
+          "lexical_score": 0.9693
+        },
+        {
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "file_sha256": "2d983e61ad246a3ce8ca10c0e8d8d075b08fa4c7c6d43bb7bea3639b3028bf75",
+          "page": 6,
+          "chunk_sha256": "8af82d626989fe96fcf68a5b952ebcc714dd1651d196113cbfe361f994be9dd8",
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "chunk": 1,
+          "retrieval_rank": 3,
+          "retrieval_score": 0.7821,
+          "dense_score": 0.8039,
+          "lexical_score": 0.731
+        },
+        {
+          "chunk_sha256": "aff96269682f64f16caaeec24e630e78b3ff995ea2acdcc69c98054ea1ca870d",
+          "chunk": 1,
+          "page": 43,
+          "file_sha256": "2d983e61ad246a3ce8ca10c0e8d8d075b08fa4c7c6d43bb7bea3639b3028bf75",
+          "relative_path": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "source": "FINAL-UKGCC-MANDATORY-REQUIREMENTS-FOR-BUSINESSES-ACT-992-1.pdf",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.8193,
+          "dense_score": 0.787,
+          "lexical_score": 0.8947
+        }
+      ],
+      "metrics": {
+        "retrieval_time_s": 7.549,
+        "generation_time_s": 3.438,
+        "total_time_s": 10.988,
+        "cache_hit": false
+      }
     }
   }
 }

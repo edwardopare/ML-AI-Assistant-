@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from pypdf import PdfReader
-from src.config import ENABLE_OCR, PDF_DIR, TEXT_CHUNK_OVERLAP, TEXT_CHUNK_SIZE
+from .config import ENABLE_OCR, PDF_DIR, TEXT_CHUNK_OVERLAP, TEXT_CHUNK_SIZE
 
 _BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+|\n{2,}")
 
@@ -35,9 +35,9 @@ def file_sha256(path: Path) -> str:
 # Extract text from scanned PDF pages with OCR.
 def _ocr_pages(pdf_path: Path) -> dict[int, str]:
     try:
-        import fitz
-        import pytesseract
-        from PIL import Image
+        import fitz  # pyrefly: ignore[missing-import] # type: ignore
+        import pytesseract  # pyrefly: ignore[missing-import] # type: ignore
+        from PIL import Image  # pyrefly: ignore[missing-import] # type: ignore
     except ImportError as exc:
         raise RuntimeError(
             "OCR is enabled but OCR dependencies are missing. "
