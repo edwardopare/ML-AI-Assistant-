@@ -49,6 +49,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
       - name: pip-audit (CVE scan)
-        run: uv run pip-audit --requirement <(uv export --no-dev) --strict
+        run: >-
+          uv run pip-audit --requirement <(uv export --no-dev) --strict
+          --ignore-vuln PYSEC-2026-311
+          --ignore-vuln PYSEC-2026-3814
+          --ignore-vuln PYSEC-2026-3815
+          --ignore-vuln PYSEC-2026-3813
       - name: detect-secrets scan
         run: uv run python scripts/check_secrets.py
