@@ -13,9 +13,9 @@ env/
 # Environment / secrets — never commit real credentials
 .env
 .env.*
-!.env.example
-!.env.dev
-!.env.prod.example
+.env.example
+.env.dev
+.env.prod.example
 
 # Runtime data stores (rebuilt by ingestion)
 .chromadb/
