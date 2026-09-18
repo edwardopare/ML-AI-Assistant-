@@ -16,10 +16,14 @@ env/
 .env.example
 .env.dev
 .env.prod.example
+.secrets.baseline
 
 # Runtime data stores (rebuilt by ingestion)
 .chromadb/
+chroma/
 data/.cache/
+*.json.tmp
+scan.json
 
 # Document source data — keep all content out of version control
 data/*.pdf

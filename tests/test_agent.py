@@ -75,7 +75,7 @@ def test_stream_parser_rejects_error_event():
 
 def test_authentication_error_is_safe():
     client = OpenRouterClient(
-        api_key="bad",
+        api_key="bad",  # pragma: allowlist secret
         max_retries=0,
         session=FakeSession([FakeResponse(status_code=401)]),
     )
