@@ -26,7 +26,6 @@ scan.json
 
 # Data folder — keep all local inputs, source PDFs, and caches out of version control
 data/
-data/.gitkeep
 
 # Test and IDE caches
 .pytest_cache/
