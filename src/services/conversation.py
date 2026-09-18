@@ -1,13 +1,16 @@
-﻿"""Conversation persistence service boundary.
+"""Conversation persistence service boundary.
 
 Allowed callers: API layer (channels/api) only.
 Do NOT import from ingest, retrieval, or generation services.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
+
+from ..config import CONVERSATION_DB_PATH, CONVERSATION_HISTORY_MESSAGES, CONVERSATION_MAX_AGE_DAYS
 from ..conversations import ConversationStore
 from ..memory_cleanup import cleanup_old_conversations
-from ..config import CONVERSATION_DB_PATH, CONVERSATION_HISTORY_MESSAGES, CONVERSATION_MAX_AGE_DAYS
 
 
 class ConversationService:

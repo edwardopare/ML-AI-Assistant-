@@ -7,6 +7,7 @@ This is invoked:
 - Automatically by the APScheduler job registered in ``api.create_app`` (once per day).
 - From the CLI via ``python main.py cleanup-conversations``.
 """
+
 from __future__ import annotations
 
 import logging

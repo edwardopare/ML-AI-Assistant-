@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -51,9 +51,4 @@ jobs:
       - name: pip-audit (CVE scan)
         run: uv run pip-audit --requirement <(uv export --no-dev) --strict
       - name: detect-secrets baseline scan
-        uses: Yelp/detect-secrets-action@v2
-        with:
-          args: >-
-            --baseline .secrets.baseline
-            --exclude-files '\.env\..*'
-            --exclude-files 'uv\.lock'
+        run: uv run detect-secrets-hook --baseline .secrets.baseline $(git ls-files)

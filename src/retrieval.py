@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import math
 import re
 from collections import Counter
 from dataclasses import dataclass
+
 import numpy as np
 from langchain_core.documents import Document
 
@@ -69,9 +71,7 @@ def _bm25_scores(query: str, documents: list[str]) -> list[float]:
                 continue
             df = document_frequency[term]
             inverse_frequency = math.log(1 + (document_count - df + 0.5) / (df + 0.5))
-            denominator = frequency + k1 * (
-                1 - b + b * length / max(average_length, 1.0)
-            )
+            denominator = frequency + k1 * (1 - b + b * length / max(average_length, 1.0))
             score += inverse_frequency * frequency * (k1 + 1) / denominator
         scores.append(score)
     maximum = max(scores, default=0.0)
@@ -160,6 +160,7 @@ class Retriever:
             dense_metadatas,
             dense_distances,
             dense_vectors,
+            strict=False,
         ):
             candidates[identifier] = _Candidate(
                 id=identifier,
@@ -192,11 +193,7 @@ class Retriever:
         ]
 
         # Collect the lexical candidates that are NOT already in the dense set.
-        new_ids_needed = [
-            all_ids[idx]
-            for idx in lexical_order
-            if all_ids[idx] not in candidates
-        ]
+        new_ids_needed = [all_ids[idx] for idx in lexical_order if all_ids[idx] not in candidates]
 
         # Targeted embedding fetch for only the new lexical-only candidates.
         if new_ids_needed:
@@ -212,7 +209,7 @@ class Retriever:
             t_embs_raw = targeted.get("embeddings")
             t_embs = t_embs_raw if t_embs_raw is not None else []
             for identifier, text, metadata, embedding in zip(
-                t_ids, t_docs, t_metas, t_embs
+                t_ids, t_docs, t_metas, t_embs, strict=False
             ):
                 candidates[identifier] = _Candidate(
                     id=identifier,
@@ -230,7 +227,6 @@ class Retriever:
                 if not candidates[identifier].metadata and len(all_metadatas) > 0:
                     candidates[identifier].metadata = all_metadatas[idx] or {}
 
-
         for candidate in candidates.values():
             candidate.combined_score = (
                 self.dense_weight * candidate.dense_score
@@ -246,14 +242,16 @@ class Retriever:
         while eligible and len(selected) < limit:
             best = max(
                 eligible,
-                key=lambda candidate: self.mmr_lambda * candidate.combined_score
-                - (1.0 - self.mmr_lambda)
-                * max(
-                    (
-                        _cosine_similarity(candidate.embedding, chosen.embedding)
-                        for chosen in selected
-                    ),
-                    default=0.0,
+                key=lambda candidate: (
+                    self.mmr_lambda * candidate.combined_score
+                    - (1.0 - self.mmr_lambda)
+                    * max(
+                        (
+                            _cosine_similarity(candidate.embedding, chosen.embedding)
+                            for chosen in selected
+                        ),
+                        default=0.0,
+                    )
                 ),
             )
             selected.append(best)

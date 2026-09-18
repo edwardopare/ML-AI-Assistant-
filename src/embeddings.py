@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from sentence_transformers import SentenceTransformer
+
 from .config import EMBEDDING_MODEL_NAME
+
 
 # Generate normalized embeddings with Sentence Transformers.
 class LocalEmbedder:

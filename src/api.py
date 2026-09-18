@@ -6,9 +6,9 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Literal, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Security, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -117,7 +117,9 @@ def create_app(channel_service: ChannelService | None = None) -> FastAPI:
 
         # Start daily background cleanup for old conversation rows.
         try:
-            from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
+            from apscheduler.schedulers.asyncio import (
+                AsyncIOScheduler,  # type: ignore[import-untyped]
+            )
 
             scheduler = AsyncIOScheduler()
             scheduler.add_job(
@@ -206,13 +208,16 @@ def create_app(channel_service: ChannelService | None = None) -> FastAPI:
         if METRICS_TOKEN:
             auth = request.headers.get("Authorization", "")
             import secrets as _s
-            if not auth.startswith("Bearer ") or not _s.compare_digest(
-                auth[7:], METRICS_TOKEN
-            ):
+
+            if not auth.startswith("Bearer ") or not _s.compare_digest(auth[7:], METRICS_TOKEN):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         try:
-            from prometheus_client import CONTENT_TYPE_LATEST, generate_latest  # type: ignore[import-untyped]
+            from prometheus_client import (  # type: ignore[import-untyped]
+                CONTENT_TYPE_LATEST,
+                generate_latest,
+            )
             from starlette.responses import Response as _Resp
+
             return _Resp(generate_latest(), media_type=CONTENT_TYPE_LATEST)
         except ImportError:
             return {"detail": "prometheus_client not installed"}
@@ -306,4 +311,3 @@ async def _answer(
 
 
 app = create_app()
-

@@ -1,12 +1,16 @@
-﻿"""Generation service boundary.
+"""Generation service boundary.
 
 Allowed callers: API layer (channels/api) only.
 Do NOT import from ingest or conversation services directly.
 """
+
 from __future__ import annotations
+
 from collections.abc import Generator
 from typing import Any
+
 from langchain_core.documents import Document
+
 from ..agent import OpenRouterClient, OpenRouterError
 
 

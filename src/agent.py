@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import hashlib
 import json
 import logging
@@ -9,6 +10,7 @@ import time
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
+
 import requests
 from langchain_core.documents import Document
 
@@ -33,14 +35,13 @@ logger = logging.getLogger(__name__)
 
 _CITATION_RE = re.compile(r"\[S(\d+)\]")
 CACHE_SCHEMA_VERSION = 2
-NO_EVIDENCE_ANSWER = (
-    "I could not find sufficiently relevant information in the indexed documents."
-)
+NO_EVIDENCE_ANSWER = "I could not find sufficiently relevant information in the indexed documents."
 
 
 # Represent a safe user-facing OpenRouter failure.
 class OpenRouterError(RuntimeError):
     pass
+
 
 # Send grounded generation requests through OpenRouter.
 class OpenRouterClient:
@@ -110,7 +111,7 @@ class OpenRouterClient:
                     raise OpenRouterError(
                         f"OpenRouter request failed after {attempt + 1} attempts: {exc}"
                     ) from exc
-                wait = min(2**attempt, 8) + random.uniform(0, 0.5 * 2**attempt)
+                wait = min(2**attempt, 8) + random.uniform(0, 0.5 * 2**attempt)  # noqa: S311
                 logger.warning(
                     "OpenRouter request failed, retrying",
                     extra={"attempt": attempt + 1, "wait_s": round(wait, 2), "error": str(exc)},
@@ -124,7 +125,7 @@ class OpenRouterClient:
             status_code = response.status_code
             response.close()
             if retryable and attempt < self.max_retries:
-                wait = min(2**attempt, 8) + random.uniform(0, 0.5 * 2**attempt)
+                wait = min(2**attempt, 8) + random.uniform(0, 0.5 * 2**attempt)  # noqa: S311
                 logger.warning(
                     "OpenRouter returned retryable status",
                     extra={"attempt": attempt + 1, "status": status_code, "wait_s": round(wait, 2)},
@@ -132,9 +133,7 @@ class OpenRouterClient:
                 time.sleep(wait)
                 continue
             if status_code in {401, 403}:
-                raise OpenRouterError(
-                    f"OpenRouter authentication failed with HTTP {status_code}."
-                )
+                raise OpenRouterError(f"OpenRouter authentication failed with HTTP {status_code}.")
             raise OpenRouterError(f"OpenRouter returned HTTP {status_code}.")
         raise OpenRouterError("OpenRouter request failed unexpectedly.")
 
@@ -269,9 +268,7 @@ class OpenRouterClient:
 
         answer = _CITATION_RE.sub(replace, answer).strip()
         cited = {
-            f"S{number}"
-            for number in _CITATION_RE.findall(answer)
-            if f"S{number}" in valid_ids
+            f"S{number}" for number in _CITATION_RE.findall(answer) if f"S{number}" in valid_ids
         }
         if valid_ids and not cited:
             evidence = ", ".join(f"[{identifier}]" for identifier in citation_map)
@@ -298,6 +295,7 @@ class OpenRouterClient:
         if not isinstance(answer, str):
             raise OpenRouterError("OpenRouter returned an invalid non-streaming answer.")
         return self._validate_citations(answer, citation_map), citation_map
+
 
 # Store versioned generated answers in an atomic JSON cache.
 class ResponseCache:
@@ -424,12 +422,9 @@ class RAGAgent:
         try:
             retrieval_query = question
             if history:
-                prior_context = "\n".join(
-                    message.get("content", "") for message in history
-                )
+                prior_context = "\n".join(message.get("content", "") for message in history)
                 retrieval_query = (
-                    f"Previous conversation:\n{prior_context}\n\n"
-                    f"Current question:\n{question}"
+                    f"Previous conversation:\n{prior_context}\n\nCurrent question:\n{question}"
                 )
             documents = retriever.retrieve(retrieval_query, top_k=self.top_k)
         finally:

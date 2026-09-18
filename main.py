@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import argparse
 import sys
 from collections.abc import Sequence
+
 from src.agent import OpenRouterError, RAGAgent, ResponseCache
 from src.config import CHROMA_DIR, CONVERSATION_MAX_AGE_DAYS, RETRIEVAL_TOP_K
 from src.embeddings import LocalEmbedder
@@ -31,9 +33,7 @@ def ingest() -> bool:
         f"{len(report.processed_files)} PDF file(s)..."
     )
     embedder = LocalEmbedder()
-    embeddings = embedder.embed_texts(
-        [document["text"] for document in report.documents]
-    )
+    embeddings = embedder.embed_texts([document["text"] for document in report.documents])
     manifest = persist_documents(
         report.documents,
         embeddings,

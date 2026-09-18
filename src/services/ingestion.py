@@ -1,12 +1,15 @@
-﻿"""Ingestion service boundary.
+"""Ingestion service boundary.
 
 Allowed callers: CLI (main.py) only.
 Do NOT import from generation or retrieval services.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
-from ..ingest import IngestionReport, build_document_chunks_with_report
+
 from ..config import PDF_DIR, TEXT_CHUNK_OVERLAP, TEXT_CHUNK_SIZE
+from ..ingest import IngestionReport, build_document_chunks_with_report
 
 
 class IngestService:
@@ -24,6 +27,4 @@ class IngestService:
 
     def build_report(self) -> IngestionReport:
         """Extract and chunk all PDFs; return a full ingestion report."""
-        return build_document_chunks_with_report(
-            self.pdf_dir, self.chunk_size, self.chunk_overlap
-        )
+        return build_document_chunks_with_report(self.pdf_dir, self.chunk_size, self.chunk_overlap)

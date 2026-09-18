@@ -8,6 +8,7 @@ Call ``configure_logging()`` once at startup (done automatically in ``create_app
 All log records pass through ``_RedactionFilter`` which strips credential-shaped
 strings before they reach any handler, preventing accidental secret leakage.
 """
+
 from __future__ import annotations
 
 import logging

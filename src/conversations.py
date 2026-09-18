@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
 from .config import CONVERSATION_DB_PATH, CONVERSATION_HISTORY_MESSAGES
 
 

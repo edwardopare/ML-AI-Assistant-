@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,6 +16,7 @@ INDEX_MANIFEST_PATH = CHROMA_DIR / "index_manifest.json"
 COLLECTION_NAME = "rag_documents"
 INDEX_SCHEMA_VERSION = 2
 PROMPT_VERSION = 2
+
 
 # Read and validate an integer environment variable.
 def _int_env(name: str, default: int, minimum: int = 0) -> int:
@@ -58,10 +61,14 @@ ENABLE_OCR = os.getenv("ENABLE_OCR", "false").strip().casefold() in {
 }
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
-OPENROUTER_BASE_URL = os.getenv(
-    "OPENROUTER_BASE_URL",
-    "https://openrouter.ai/api/v1",
-).strip().rstrip("/")
+OPENROUTER_BASE_URL = (
+    os.getenv(
+        "OPENROUTER_BASE_URL",
+        "https://openrouter.ai/api/v1",
+    )
+    .strip()
+    .rstrip("/")
+)
 OPENROUTER_MODEL = os.getenv(
     "OPENROUTER_MODEL",
     "openai/gpt-4o-mini",
@@ -127,17 +134,13 @@ TEAMS_WEBHOOK_SECRET: str = os.getenv("TEAMS_WEBHOOK_SECRET", "").strip()
 # Comma-separated list of origins allowed by CORS middleware.
 # Example: "https://myapp.example.com,https://localhost:3000"
 CORS_ORIGINS: list[str] = [
-    origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "").split(",")
-    if origin.strip()
+    origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()
 ]
 
 # Comma-separated list of Host header values that are accepted.
 # Leave empty to allow any host (acceptable for local dev).
 API_ALLOWED_HOSTS: list[str] = [
-    host.strip()
-    for host in os.getenv("API_ALLOWED_HOSTS", "").split(",")
-    if host.strip()
+    host.strip() for host in os.getenv("API_ALLOWED_HOSTS", "").split(",") if host.strip()
 ]
 
 # Hard cap on inbound HTTP request body size in bytes (default 64 KB).
@@ -151,4 +154,3 @@ CONVERSATION_MAX_AGE_DAYS: int = _int_env("CONVERSATION_MAX_AGE_DAYS", 30, 1)
 
 # Optional separate metrics bearer token.  When set, /metrics requires it.
 METRICS_TOKEN: str = os.getenv("METRICS_TOKEN", "").strip()
-

@@ -49,9 +49,7 @@ def test_no_evidence_skips_openrouter():
 
 
 def test_non_streaming_answer_validates_citations():
-    response = FakeResponse(
-        payload={"choices": [{"message": {"content": "Grounded fact [S1]."}}]}
-    )
+    response = FakeResponse(payload={"choices": [{"message": {"content": "Grounded fact [S1]."}}]})
     client = OpenRouterClient(api_key="test", session=FakeSession([response]))
     document = Document(
         page_content="Grounded fact.",

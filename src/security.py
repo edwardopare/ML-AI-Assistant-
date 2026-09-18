@@ -6,6 +6,7 @@ Provides:
 - ``RequestSizeLimitMiddleware`` — Starlette middleware capping raw body size.
 - ``redact_for_log`` — strips credential-shaped strings before logging or LLM dispatch.
 """
+
 from __future__ import annotations
 
 import base64
@@ -126,16 +127,14 @@ async def verify_teams_signature(request: Request) -> bytes:
     presented_b64 = auth_header[5:].strip()
     try:
         key_bytes = base64.b64decode(TEAMS_WEBHOOK_SECRET)
-    except Exception:
+    except Exception as exc:
         logger.error("TEAMS_WEBHOOK_SECRET is not valid base64 — check your configuration")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Server configuration error.",
-        )
+        ) from exc
 
-    expected = base64.b64encode(
-        hmac.new(key_bytes, body, hashlib.sha256).digest()
-    ).decode()
+    expected = base64.b64encode(hmac.new(key_bytes, body, hashlib.sha256).digest()).decode()
 
     if not secrets.compare_digest(presented_b64, expected):
         logger.warning("Teams HMAC signature mismatch — request rejected")
@@ -181,8 +180,7 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
                 )
                 return Response(
                     content=(
-                        f'{{"detail":"Request body too large.'
-                        f' Maximum is {self.max_bytes} bytes."}}'
+                        f'{{"detail":"Request body too large. Maximum is {self.max_bytes} bytes."}}'
                     ),
                     status_code=413,
                     media_type="application/json",

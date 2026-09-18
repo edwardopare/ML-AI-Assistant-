@@ -50,9 +50,5 @@ def test_conversations_are_isolated_by_user_and_channel(tmp_path: Path):
         answer="Private answer",
     )
 
-    assert store.history(
-        channel="web", conversation_id="shared", user_id="user-2"
-    ) == []
-    assert store.history(
-        channel="teams", conversation_id="shared", user_id="user-1"
-    ) == []
+    assert store.history(channel="web", conversation_id="shared", user_id="user-2") == []
+    assert store.history(channel="teams", conversation_id="shared", user_id="user-1") == []

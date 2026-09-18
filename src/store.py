@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import hashlib
 import json
 import shutil
@@ -6,6 +7,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
 import chromadb
 from chromadb.config import Settings
 from chromadb.errors import NotFoundError
@@ -24,6 +26,7 @@ from .config import (
 # Signal that an index cannot be used with current settings.
 class IndexCompatibilityError(RuntimeError):
     pass
+
 
 # Create the authoritative persistent ChromaDB client.
 def create_client(persist_directory: Path = CHROMA_DIR):
@@ -107,7 +110,9 @@ def validate_manifest(
     embedding_dimension: int | None = None,
 ) -> None:
     if not manifest:
-        raise IndexCompatibilityError("The index manifest is missing or invalid; re-ingest documents.")
+        raise IndexCompatibilityError(
+            "The index manifest is missing or invalid; re-ingest documents."
+        )
     if manifest.get("schema_version") != INDEX_SCHEMA_VERSION:
         raise IndexCompatibilityError("The index schema changed; re-ingest documents.")
     if manifest.get("embedding_model") != embedding_model:
@@ -121,12 +126,11 @@ def validate_manifest(
         raise IndexCompatibilityError(
             "The embedding dimension differs from the stored index; re-ingest documents."
         )
-    if manifest.get("chunk_size") != TEXT_CHUNK_SIZE or manifest.get(
-        "chunk_overlap"
-    ) != TEXT_CHUNK_OVERLAP:
-        raise IndexCompatibilityError(
-            "Chunking configuration changed; re-ingest documents."
-        )
+    if (
+        manifest.get("chunk_size") != TEXT_CHUNK_SIZE
+        or manifest.get("chunk_overlap") != TEXT_CHUNK_OVERLAP
+    ):
+        raise IndexCompatibilityError("Chunking configuration changed; re-ingest documents.")
 
 
 # Check whether a populated collection and manifest exist.
@@ -195,9 +199,7 @@ def persist_documents(
             "chunk_size": TEXT_CHUNK_SIZE,
             "chunk_overlap": TEXT_CHUNK_OVERLAP,
             "document_count": len(documents),
-            "source_count": len(
-                {document["metadata"]["relative_path"] for document in documents}
-            ),
+            "source_count": len({document["metadata"]["relative_path"] for document in documents}),
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         manifest_path = persist_directory / INDEX_MANIFEST_PATH.name

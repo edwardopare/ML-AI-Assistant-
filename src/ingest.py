@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 import hashlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+
 from pypdf import PdfReader
+
 from .config import ENABLE_OCR, PDF_DIR, TEXT_CHUNK_OVERLAP, TEXT_CHUNK_SIZE
 
 _BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+|\n{2,}")
@@ -173,7 +176,7 @@ def build_document_chunks_with_report(
                 ):
                     chunk_hash = hashlib.sha256(chunk.encode("utf-8")).hexdigest()
                     stable_id = hashlib.sha256(
-                        f"{relative_path}:{page_number}:{chunk_index}:{chunk_hash}".encode("utf-8")
+                        f"{relative_path}:{page_number}:{chunk_index}:{chunk_hash}".encode()
                     ).hexdigest()
                     report.documents.append(
                         {

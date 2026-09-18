@@ -1,12 +1,15 @@
-﻿"""Retrieval service boundary.
+"""Retrieval service boundary.
 
 Allowed callers: generation service only.
 Do NOT import from ingest or conversation services.
 """
+
 from __future__ import annotations
+
 from langchain_core.documents import Document
-from ..retrieval import Retriever
+
 from ..config import RETRIEVAL_TOP_K
+from ..retrieval import Retriever
 
 
 class RetrievalService:
@@ -23,7 +26,7 @@ class RetrievalService:
         """Release the underlying ChromaDB client."""
         self._retriever.close()
 
-    def __enter__(self) -> "RetrievalService":
+    def __enter__(self) -> RetrievalService:
         return self
 
     def __exit__(self, *_: object) -> None:
