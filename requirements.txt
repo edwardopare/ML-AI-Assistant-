@@ -1,9 +1,13 @@
+apscheduler>=3.10,<4
 chromadb>=1.5,<2
 fastapi>=0.115,<1
 langchain-core>=1.0,<2
 numpy>=2.0,<3
-pypdf>=6.0,<7
+pypdf>=6.16.1,<7
 python-dotenv>=1.0,<2
+python-json-logger>=2.0,<3
 requests>=2.32,<3
 sentence-transformers>=5.0,<6
+slowapi>=0.1,<1
+starlette-prometheus>=0.10,<1
 uvicorn[standard]>=0.34,<1

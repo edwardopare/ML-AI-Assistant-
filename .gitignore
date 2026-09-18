@@ -21,23 +21,12 @@ env/
 # Runtime data stores (rebuilt by ingestion)
 .chromadb/
 chroma/
-data/.cache/
 *.json.tmp
 scan.json
 
-# Document source data — keep all content out of version control
-data/*.pdf
-data/*.PDF
-data/**/*.pdf
-data/**/*.PDF
-data/*.docx
-data/**/*.docx
-data/*.txt
-data/**/*.txt
-data/*.csv
-data/**/*.csv
-data/*.xlsx
-data/**/*.xlsx
+# Data folder — keep all local inputs, source PDFs, and caches out of version control
+data/
+!data/.gitkeep
 
 # Test and IDE caches
 .pytest_cache/
